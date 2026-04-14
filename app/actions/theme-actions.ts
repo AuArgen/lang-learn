@@ -10,6 +10,7 @@ export async function createThemeAction(formData: FormData) {
 
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
+  const language = formData.get('language') as string;
 
   if (user.role === 'USER') {
     const isLimitReached = await hasReachedThemeLimit(user.userId);
@@ -22,6 +23,7 @@ export async function createThemeAction(formData: FormData) {
     author_id: user.userId,
     title,
     description,
+    language,
     status: 'draft'
   });
 
@@ -48,15 +50,28 @@ export async function updateThemeAction(id: string, formData: FormData) {
   const user = await getServerUser();
   if (!user) throw new Error("Unauthorized");
   
-  if (user.role !== 'PRO' && user.role !== 'ADMIN') {
+  const userRole = user.role?.toUpperCase() || 'USER';
+  const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRATOR';
+  const isProOrTeacher = userRole === 'PRO' || userRole === 'TEACHER';
+
+  if (!isAdmin && !isProOrTeacher) {
     throw new Error("Сиздин жазылууңуз (PRO) же администратор укугуңуз жок.");
+  }
+
+  // If not admin, verify they are the author
+  if (!isAdmin) {
+    const theme = await themesService.getTheme(id);
+    if (!theme || theme.author_id !== user.userId) {
+      throw new Error("Сиз бул теманы өзгөртө албайсыз, анткени сиз автору эмессиз.");
+    }
   }
 
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
+  const language = formData.get('language') as string;
 
   if (title && description) {
-    await themesService.updateTheme(id, { title, description });
+    await themesService.updateTheme(id, { title, description, language });
     revalidatePath(`/themes/${id}`);
     revalidatePath('/themes');
   }

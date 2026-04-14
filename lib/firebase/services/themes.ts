@@ -1,35 +1,6 @@
 import { adminDb } from '../admin';
-
-export interface Theme {
-  id?: string;
-  author_id: string;
-  title: string;
-  description: string;
-  words_count: number;
-  status: 'draft' | 'pending' | 'published';
-  created_at: string;
-}
-
-let mockThemes: Theme[] = [
-  {
-    id: 'user-mock-1',
-    author_id: 'mock_author',
-    title: 'My Custom Animals',
-    description: 'A mock theme to show my custom words',
-    words_count: 5,
-    status: 'draft',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'user-mock-2',
-    author_id: 'mock_author',
-    title: 'Phrasal Verbs',
-    description: 'Important phrasal verbs for everyday use',
-    words_count: 23,
-    status: 'published',
-    created_at: new Date(Date.now() - 86400000).toISOString()
-  }
-];
+import { Theme } from '@/lib/types/theme';
+import { readMockDB, writeMockDB } from './mockDb';
 
 export const themesService = {
   async createTheme(data: Omit<Theme, 'id' | 'created_at' | 'words_count'>) {
@@ -45,13 +16,15 @@ export const themesService = {
       return theme;
     } catch (error: any) {
       console.warn('⚠️ Firestore disabled. Creating theme in local memory mock.');
+      const db = readMockDB();
       const newTheme: Theme = {
         ...data,
         id: 'mock-theme-' + Date.now(),
         words_count: 0,
         created_at: new Date().toISOString()
       };
-      mockThemes.push(newTheme);
+      db.themes.push(newTheme);
+      writeMockDB(db);
       return newTheme;
     }
   },
@@ -61,18 +34,22 @@ export const themesService = {
       await adminDb.collection('themes').doc(id).update(data);
     } catch (error: any) {
       console.warn('⚠️ Firestore disabled. Updating theme in local memory mock.');
-      const themeIndex = mockThemes.findIndex(t => t.id === id);
+      const db = readMockDB();
+      const themeIndex = db.themes.findIndex(t => t.id === id);
       if (themeIndex > -1) {
-        mockThemes[themeIndex] = { ...mockThemes[themeIndex], ...data };
+        db.themes[themeIndex] = { ...db.themes[themeIndex], ...data };
+        writeMockDB(db);
       }
     }
   },
 
   // Helper for mock data
   updateMockThemeCount(id: string, delta: number) {
-    const themeIndex = mockThemes.findIndex(t => t.id === id);
+    const db = readMockDB();
+    const themeIndex = db.themes.findIndex(t => t.id === id);
     if (themeIndex > -1) {
-      mockThemes[themeIndex].words_count = (mockThemes[themeIndex].words_count || 0) + delta;
+      db.themes[themeIndex].words_count = (db.themes[themeIndex].words_count || 0) + delta;
+      writeMockDB(db);
     }
   },
 
@@ -81,7 +58,12 @@ export const themesService = {
       await adminDb.collection('themes').doc(id).delete();
     } catch (error: any) {
       console.warn('⚠️ Firestore disabled. Deleting theme from local memory mock.');
-      mockThemes = mockThemes.filter(t => t.id !== id);
+      const db = readMockDB();
+      const index = db.themes.findIndex(t => t.id === id);
+      if (index > -1) {
+        db.themes.splice(index, 1);
+        writeMockDB(db);
+      }
     }
   },
   
@@ -92,7 +74,8 @@ export const themesService = {
       return doc.data() as Theme;
     } catch (error: any) {
       console.warn('⚠️ Firestore disabled. Returning mock theme detail.');
-      const t = mockThemes.find(theme => theme.id === id);
+      const db = readMockDB();
+      const t = db.themes.find(theme => theme.id === id);
       if (t) return t;
       
       // Fallback for dev environment where global memory arrays might not sync across threads
@@ -116,11 +99,28 @@ export const themesService = {
       const snapshot = await adminDb.collection('themes').where('author_id', '==', userId).get();
       return snapshot.docs.map(doc => doc.data() as Theme);
     } catch (error: any) {
-      // Allow initial mocks to match current mock user id
-      mockThemes.forEach(t => {
-        if (t.id === 'user-mock-1' || t.id === 'user-mock-2') t.author_id = userId;
-      });
-      return mockThemes.filter(t => t.author_id === userId).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const db = readMockDB();
+      return db.themes.filter(t => t.author_id === userId).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+  },
+
+  async getPublishedThemes() {
+    try {
+      const snapshot = await adminDb.collection('themes').where('status', '==', 'published').get();
+      return snapshot.docs.map(doc => doc.data() as Theme);
+    } catch (error: any) {
+      console.warn('⚠️ Firestore disabled. Returning mock published themes.');
+      const db = readMockDB();
+      const published = db.themes.filter(t => t.status === 'published');
+      
+      if (published.length === 0) {
+        return [
+          { id: 'mock-1', title: 'Action Words 🏃‍♂️', description: 'Basic verbs for everyday actions', words_count: 12, status: 'published' },
+          { id: 'mock-2', title: 'Food & Drinks 🍎', description: 'Common fruits, vegetables, and beverages', words_count: 15, status: 'published' },
+          { id: 'mock-3', title: 'Colors & Shapes 🔴', description: 'Learn to describe the visual world', words_count: 10, status: 'published' }
+        ] as any[];
+      }
+      return published;
     }
   }
 };

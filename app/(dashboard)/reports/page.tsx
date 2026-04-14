@@ -5,7 +5,10 @@ import { redirect } from 'next/navigation';
 
 export default async function ReportsPage() {
   const user = await getServerUser();
-  if (!user || user.role === 'USER') {
+  const userRole = user?.role?.toUpperCase() || 'USER';
+  const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRATOR';
+
+  if (!user || (!isAdmin && user.role === 'USER')) {
     return redirect('/themes');
   }
 
@@ -18,14 +21,14 @@ export default async function ReportsPage() {
   const results = resultsSnapshot.docs.map(doc => doc.data());
 
   let pendingThemes: any[] = [];
-  if (user.role === 'ADMIN') {
+  if (isAdmin) {
     const pendingSnapshot = await adminDb.collection('themes').where('status', '==', 'pending').get();
     pendingThemes = pendingSnapshot.docs.map(d => Object.assign({ id: d.id }, d.data()));
   }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
-      {user.role === 'ADMIN' && pendingThemes.length > 0 && (
+      {isAdmin && pendingThemes.length > 0 && (
         <div>
           <h2 className="text-2xl font-bold text-slate-900 mb-4">Жарыялоого сурамдар (Админ)</h2>
           <div className="grid gap-4 md:grid-cols-2">

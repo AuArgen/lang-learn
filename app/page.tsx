@@ -18,20 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  // Fetch only published themes for the public landing page
-  const { adminDb } = await import('@/lib/firebase/admin');
-  let themes: any[] = [];
-  try {
-    const publishedThemesSnapshot = await adminDb.collection('themes').where('status', '==', 'published').get();
-    themes = publishedThemesSnapshot.docs.map(d => Object.assign({ id: d.id }, d.data()));
-  } catch (error) {
-    console.warn('⚠️ Cloud Firestore API is disabled. Falling back to mock data for demonstration purposes.');
-    themes = [
-      { id: 'mock-1', title: 'Action Words 🏃‍♂️', description: 'Basic verbs for everyday actions', words_count: 12, status: 'published' },
-      { id: 'mock-2', title: 'Food & Drinks 🍎', description: 'Common fruits, vegetables, and beverages', words_count: 15, status: 'published' },
-      { id: 'mock-3', title: 'Colors & Shapes 🔴', description: 'Learn to describe the visual world', words_count: 10, status: 'published' }
-    ];
-  }
+  const themes = await themesService.getPublishedThemes();
   
   const user = await getServerUser();
 

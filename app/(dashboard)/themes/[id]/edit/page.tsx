@@ -13,8 +13,12 @@ export default async function EditThemePage({ params }: { params: { id: string }
   
   if (!theme) return redirect('/themes');
   
-  // Checking permissions: user must be PRO or ADMIN, and (if PRO, must be author)
-  if (user.role === 'USER' || (user.role === 'PRO' && theme.author_id !== user.userId)) {
+  const userRole = user.role?.toUpperCase() || 'USER';
+  const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRATOR';
+  const isProOrTeacher = userRole === 'PRO' || userRole === 'TEACHER';
+
+  // Checking permissions: user must be PRO/TEACHER or ADMIN, and (if PRO/TEACHER, must be author)
+  if (!isAdmin && (!isProOrTeacher || theme.author_id !== user.userId)) {
       return redirect(`/themes/${id}`);
   }
 

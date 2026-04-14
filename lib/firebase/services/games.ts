@@ -1,4 +1,5 @@
 import { adminDb } from '../admin';
+import { readMockDB, writeMockDB } from './mockDb';
 
 export interface GameSession {
   id?: string;
@@ -12,26 +13,54 @@ export interface GameSession {
 
 export const gamesService = {
   async createGame(data: Omit<GameSession, 'id' | 'created_at'>) {
-    const docRef = adminDb.collection('games').doc();
-    const game = {
-      ...data,
-      id: docRef.id,
-      created_at: new Date().toISOString(),
-    };
-    await docRef.set(game);
-    return game;
+    try {
+      const docRef = adminDb.collection('games').doc();
+      const game = {
+        ...data,
+        id: docRef.id,
+        created_at: new Date().toISOString(),
+      };
+      await docRef.set(game);
+      return game;
+    } catch (error: any) {
+      console.warn('⚠️ Firestore disabled. Creating game in local memory mock.');
+      const db = readMockDB();
+      const game = {
+        ...data,
+        id: 'mock-game-' + Date.now(),
+        created_at: new Date().toISOString(),
+      };
+      db.games.push(game);
+      writeMockDB(db);
+      return game;
+    }
   },
   
   async saveResult(gameId: string, themeId: string, playerName: string, score: number, mistakes: number) {
-    const docRef = adminDb.collection('game_results').doc();
-    await docRef.set({
-      id: docRef.id,
-      game_id: gameId,
-      theme_id: themeId,
-      player_or_team_name: playerName,
-      score,
-      mistakes_count: mistakes,
-      played_at: new Date().toISOString(),
-    });
+    try {
+      const docRef = adminDb.collection('game_results').doc();
+      await docRef.set({
+        id: docRef.id,
+        game_id: gameId,
+        theme_id: themeId,
+        player_or_team_name: playerName,
+        score,
+        mistakes_count: mistakes,
+        played_at: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.warn('⚠️ Firestore disabled. Saving game result in local memory mock.');
+      const db = readMockDB();
+      db.game_results.push({
+        id: 'mock-result-' + Date.now(),
+        game_id: gameId,
+        theme_id: themeId,
+        player_or_team_name: playerName,
+        score,
+        mistakes_count: mistakes,
+        played_at: new Date().toISOString(),
+      });
+      writeMockDB(db);
+    }
   }
 };

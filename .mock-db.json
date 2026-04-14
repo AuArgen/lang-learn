@@ -1,0 +1,280 @@
+{
+  "themes": [
+    {
+      "author_id": "104238352717501962613",
+      "title": "f",
+      "description": "f",
+      "language": "en",
+      "status": "pending",
+      "id": "mock-theme-1776068114487",
+      "words_count": 3,
+      "created_at": "2026-04-13T08:15:14.487Z"
+    },
+    {
+      "author_id": "104238352717501962613",
+      "title": "1",
+      "description": "1",
+      "language": "ru",
+      "status": "draft",
+      "id": "mock-theme-1776071051748",
+      "words_count": 1,
+      "created_at": "2026-04-13T09:04:11.748Z"
+    }
+  ],
+  "words": [
+    {
+      "id": "m1-1",
+      "theme_id": "user-mock-1",
+      "word": "Cat",
+      "translation": "Мышык",
+      "language": "en"
+    },
+    {
+      "id": "m1-2",
+      "theme_id": "user-mock-1",
+      "word": "Dog",
+      "translation": "Ит",
+      "language": "en"
+    },
+    {
+      "id": "m1-3",
+      "theme_id": "user-mock-1",
+      "word": "Tiger",
+      "translation": "Жолборс",
+      "language": "en"
+    },
+    {
+      "id": "m2-1",
+      "theme_id": "user-mock-2",
+      "word": "Give up",
+      "translation": "Багынуу, таштоо",
+      "language": "en"
+    },
+    {
+      "id": "m2-2",
+      "theme_id": "user-mock-2",
+      "word": "Look for",
+      "translation": "Издөө",
+      "language": "en"
+    },
+    {
+      "id": "m2-3",
+      "theme_id": "user-mock-2",
+      "word": "Take off",
+      "translation": "Чечүү, учуу",
+      "language": "en"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "Hello",
+      "translation": "Салам",
+      "language": "kg",
+      "id": "mock-word-1776068171502"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "one",
+      "translation": "1",
+      "language": "kg",
+      "id": "mock-word-1776068192002"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "two",
+      "translation": "2",
+      "language": "kg",
+      "id": "mock-word-1776068196682"
+    },
+    {
+      "theme_id": "mock-theme-1776071051748",
+      "word": "Яблоко",
+      "translation": "Алма",
+      "language": "kg",
+      "id": "mock-word-1776071065093"
+    }
+  ],
+  "games": [
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776069512029",
+      "created_at": "2026-04-13T08:38:32.029Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776070517387",
+      "created_at": "2026-04-13T08:55:17.387Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776070593394",
+      "created_at": "2026-04-13T08:56:33.394Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776070954520",
+      "created_at": "2026-04-13T09:02:34.520Z"
+    },
+    {
+      "theme_id": "mock-theme-1776071051748",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776071077744",
+      "created_at": "2026-04-13T09:04:37.744Z"
+    },
+    {
+      "theme_id": "mock-theme-1776071051748",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776071319993",
+      "created_at": "2026-04-13T09:08:39.993Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776071341864",
+      "created_at": "2026-04-13T09:09:01.864Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776071396203",
+      "created_at": "2026-04-13T09:09:56.203Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776139736145",
+      "created_at": "2026-04-14T04:08:56.145Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776139772554",
+      "created_at": "2026-04-14T04:09:32.554Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "team",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776140281427",
+      "created_at": "2026-04-14T04:18:01.427Z"
+    }
+  ],
+  "game_results": [
+    {
+      "id": "mock-result-1776069612155",
+      "game_id": "mock-game-1776069512029",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "фыфт",
+      "score": 10,
+      "mistakes_count": 0,
+      "played_at": "2026-04-13T08:40:12.155Z"
+    },
+    {
+      "id": "mock-result-1776070578215",
+      "game_id": "mock-game-1776070517387",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Fhuty",
+      "score": 10,
+      "mistakes_count": 1,
+      "played_at": "2026-04-13T08:56:18.215Z"
+    },
+    {
+      "id": "mock-result-1776071154934",
+      "game_id": "mock-game-1776071077744",
+      "theme_id": "mock-theme-1776071051748",
+      "player_or_team_name": "Арген",
+      "score": 0,
+      "mistakes_count": 0,
+      "played_at": "2026-04-13T09:05:54.934Z"
+    },
+    {
+      "id": "mock-result-1776071329943",
+      "game_id": "mock-game-1776071319993",
+      "theme_id": "mock-theme-1776071051748",
+      "player_or_team_name": "арген",
+      "score": 0,
+      "mistakes_count": 0,
+      "played_at": "2026-04-13T09:08:49.943Z"
+    },
+    {
+      "id": "mock-result-1776071370800",
+      "game_id": "mock-game-1776071341864",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "арген",
+      "score": 20,
+      "mistakes_count": 1,
+      "played_at": "2026-04-13T09:09:30.800Z"
+    },
+    {
+      "id": "mock-result-1776071516158",
+      "game_id": "mock-game-1776071396203",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "арген",
+      "score": 0,
+      "mistakes_count": 0,
+      "played_at": "2026-04-13T09:11:56.158Z"
+    },
+    {
+      "id": "mock-result-1776139771528",
+      "game_id": "mock-game-1776139736145",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Fcfy",
+      "score": 20,
+      "mistakes_count": 0,
+      "played_at": "2026-04-14T04:09:31.528Z"
+    },
+    {
+      "id": "mock-result-1776139877897",
+      "game_id": "mock-game-1776139772554",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Fcfy",
+      "score": 0,
+      "mistakes_count": 1,
+      "played_at": "2026-04-14T04:11:17.897Z"
+    },
+    {
+      "id": "mock-result-1776140314261",
+      "game_id": "mock-game-1776140281427",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Команда 1 & Команда 2",
+      "score": 20,
+      "mistakes_count": 0,
+      "played_at": "2026-04-14T04:18:34.261Z"
+    }
+  ]
+}
