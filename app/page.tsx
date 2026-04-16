@@ -25,7 +25,7 @@ export default async function HomePage() {
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
-  const appUrl = `${protocol}://${host}`;
+  const appUrl = process.env.APP_URL || `${protocol}://${host}`;
 
   let authUrl = process.env.AUTH_SERVICE_URL || '/api/auth/callback?token=mock_token';
   if (authUrl.includes('localhost:3000')) {

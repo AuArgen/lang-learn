@@ -17,6 +17,7 @@ export async function GET(request: Request) {
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+  const appUrl = process.env.APP_URL || `${protocol}://${host}`;
 
-  return NextResponse.redirect(`${protocol}://${host}/`);
+  return NextResponse.redirect(`${appUrl}/`);
 }
