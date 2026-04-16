@@ -3,7 +3,14 @@ import path from 'path';
 import { Theme } from '@/lib/types/theme';
 import { Word } from './words'; // We'll make sure this works, or we can just use any
 
-const DB_PATH = path.join(process.cwd(), '.mock-db.json');
+const DATA_DIR = path.join(process.cwd(), 'data');
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {}
+
+const DB_PATH = path.join(DATA_DIR, '.mock-db.json');
 
 interface MockDB {
   themes: Theme[];

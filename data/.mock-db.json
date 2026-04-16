@@ -1,0 +1,49 @@
+{
+  "themes": [],
+  "words": [
+    {
+      "id": "m1-1",
+      "theme_id": "user-mock-1",
+      "word": "Cat",
+      "translation": "Мышык",
+      "language": "en"
+    },
+    {
+      "id": "m1-2",
+      "theme_id": "user-mock-1",
+      "word": "Dog",
+      "translation": "Ит",
+      "language": "en"
+    },
+    {
+      "id": "m1-3",
+      "theme_id": "user-mock-1",
+      "word": "Tiger",
+      "translation": "Жолборс",
+      "language": "en"
+    },
+    {
+      "id": "m2-1",
+      "theme_id": "user-mock-2",
+      "word": "Give up",
+      "translation": "Багынуу, таштоо",
+      "language": "en"
+    },
+    {
+      "id": "m2-2",
+      "theme_id": "user-mock-2",
+      "word": "Look for",
+      "translation": "Издөө",
+      "language": "en"
+    },
+    {
+      "id": "m2-3",
+      "theme_id": "user-mock-2",
+      "word": "Take off",
+      "translation": "Чечүү, учуу",
+      "language": "en"
+    }
+  ],
+  "games": [],
+  "game_results": []
+}
