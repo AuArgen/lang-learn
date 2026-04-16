@@ -28,7 +28,8 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 # openssl required at runtime for Prisma engine
-RUN apk add --no-cache openssl
+# su-exec allows entrypoint (root) to drop to nextjs user for the actual server process
+RUN apk add --no-cache openssl su-exec
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -54,10 +55,9 @@ COPY entrypoint.sh ./entrypoint.sh
 RUN chmod 755 /app/entrypoint.sh
 
 # Create the data directory with correct ownership before switching user
-# (the SQLite file will be created here on first run via volume mount)
-RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
-
-USER nextjs
+# Entrypoint runs as root so it can write to the host-mounted volume,
+# then su-exec drops privileges to nextjs for the actual Next.js server.
+RUN mkdir -p /app/data
 
 EXPOSE 3000
 
