@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { signJwtToken } from '@/lib/auth/jwt';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -112,8 +112,13 @@ export async function GET(request: Request) {
       path: '/',
     });
 
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+    const appUrl = process.env.APP_URL || `${protocol}://${host}`;
+
     // 5. Redirect to Home
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(`${appUrl}/`);
 
   } catch (error) {
     console.error('Auth callback error:', error);
