@@ -49,8 +49,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_module
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
-# Copy entrypoint and make it executable
-COPY --chmod=755 entrypoint.sh ./entrypoint.sh
+# Copy entrypoint and make it executable (RUN chmod used for compatibility with non-BuildKit Docker)
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod 755 /app/entrypoint.sh
 
 # Create the data directory with correct ownership before switching user
 # (the SQLite file will be created here on first run via volume mount)
