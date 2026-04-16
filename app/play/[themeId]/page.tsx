@@ -1,9 +1,19 @@
+import { Metadata } from 'next';
 import { themesService } from '@/lib/firebase/services/themes';
 import { wordsService } from '@/lib/firebase/services/words';
 import PlayContainer from '@/components/PlayContainer';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: { params: { themeId: string } }): Promise<Metadata> {
+  const { themeId } = await params;
+  const theme = await themesService.getTheme(themeId);
+  
+  return {
+    title: theme ? `Оюн: ${theme.title}` : 'Оюн',
+  };
+}
 
 export default async function PlayPage({ params }: { params: { themeId: string } }) {
   const { themeId } = await params;
