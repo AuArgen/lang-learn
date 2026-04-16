@@ -2,6 +2,7 @@ import { themesService } from '@/lib/firebase/services/themes';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { getServerUser } from '@/lib/auth/server-auth';
+import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
   title: 'BilimAi - Англисчени Үн менен Оюн аркылуу Үйрөнүңүз',
@@ -19,8 +20,17 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const themes = await themesService.getPublishedThemes();
-  
   const user = await getServerUser();
+
+  const headersList = headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+  const appUrl = `${protocol}://${host}`;
+
+  let authUrl = process.env.AUTH_SERVICE_URL || '/api/auth/callback?token=mock_token';
+  if (authUrl.includes('localhost:3000')) {
+    authUrl = authUrl.replace('http://localhost:3000', appUrl);
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -40,7 +50,7 @@ export default async function HomePage() {
                 </a>
               </div>
             ) : (
-              <a href={process.env.AUTH_SERVICE_URL || '/api/auth/callback?token=mock_token'} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium transition shadow-md shadow-indigo-200">
+              <a href={authUrl} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium transition shadow-md shadow-indigo-200">
                 Кирүү (Login)
               </a>
             )}
