@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 export async function GET(request: Request) {
   const cookieStore = await cookies();
@@ -14,5 +14,9 @@ export async function GET(request: Request) {
 
   cookieStore.delete('session');
 
-  return NextResponse.redirect(new URL('/', request.url));
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+
+  return NextResponse.redirect(`${protocol}://${host}/`);
 }
