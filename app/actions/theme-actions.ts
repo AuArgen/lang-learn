@@ -3,6 +3,7 @@
 import { themesService } from '@/lib/firebase/services/themes';
 import { getServerUser, hasReachedThemeLimit } from '@/lib/auth/server-auth';
 import { revalidatePath } from 'next/cache';
+import prisma from '@/lib/db/prisma';
 
 export async function createThemeAction(formData: FormData) {
   const user = await getServerUser();
@@ -18,6 +19,18 @@ export async function createThemeAction(formData: FormData) {
       throw new Error("Сиздин лимит бүттү. Болгону 1 гана тема кошо аласыз.");
     }
   }
+
+  // Ensure user record exists in the DB before creating a theme.
+  // This guards against foreign key violations if the user wasn't saved during auth callback.
+  await prisma.user.upsert({
+    where: { id: user.userId },
+    update: { role: user.role || 'USER' },
+    create: {
+      id: user.userId,
+      google_id: user.userId,
+      role: user.role || 'USER',
+    },
+  });
 
   await themesService.createTheme({
     author_id: user.userId,
