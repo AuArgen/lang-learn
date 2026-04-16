@@ -8,6 +8,8 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import WordsClient from './WordsClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ThemeDetailsPage({ params }: { params: { id: string } }) {
   const user = await getServerUser();
   if (!user) return <div>Сураныч, системге кириңиз.</div>;

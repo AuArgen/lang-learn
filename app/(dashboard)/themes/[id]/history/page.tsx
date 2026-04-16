@@ -4,6 +4,8 @@ import { getServerUser } from '@/lib/auth/server-auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ThemeHistoryPage({ params }: { params: { id: string } }) {
   const user = await getServerUser();
   if (!user) return <div>Сураныч, системге кириңиз.</div>;

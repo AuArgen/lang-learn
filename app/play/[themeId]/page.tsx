@@ -3,6 +3,8 @@ import { wordsService } from '@/lib/firebase/services/words';
 import PlayContainer from '@/components/PlayContainer';
 import { redirect } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PlayPage({ params }: { params: { themeId: string } }) {
   const { themeId } = await params;
   const theme = await themesService.getTheme(themeId);

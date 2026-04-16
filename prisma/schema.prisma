@@ -1,0 +1,86 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../data/dev.db"
+}
+
+model User {
+  id                      String    @id @default(uuid())
+  google_id               String?   @unique
+  name                    String?
+  email                   String?   @unique
+  role                    String    @default("USER")
+  subscription_expires_at DateTime?
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  themes                  Theme[]
+  games                   GameSession[]
+}
+
+model Theme {
+  id           String   @id @default(uuid())
+  author_id    String
+  title        String
+  description  String
+  language     String?
+  words_count  Int      @default(0)
+  status       String   @default("draft") // draft, pending, published
+  created_at   DateTime @default(now())
+  
+  user         User     @relation(fields: [author_id], references: [id])
+
+  words        Word[]
+  game_results GameResult[]
+  games        GameSession[]
+}
+
+model Word {
+  id              String   @id @default(uuid())
+  theme_id        String
+  theme           Theme    @relation(fields: [theme_id], references: [id], onDelete: Cascade)
+  
+  word            String
+  translation     String
+  language        String   @default("en")
+  audio_url       String?
+  is_manual_input Boolean  @default(false)
+}
+
+model GameSession {
+  id             String   @id @default(uuid())
+  theme_id       String
+  theme          Theme    @relation(fields: [theme_id], references: [id], onDelete: Cascade)
+  
+  host_id        String?
+  host           User?    @relation(fields: [host_id], references: [id])
+
+  mode           String   @default("solo")
+  is_public_link Boolean  @default(true)
+  status         String   @default("waiting") // waiting, playing, finished
+  created_at     DateTime @default(now())
+
+  results        GameResult[]
+}
+
+model GameResult {
+  id                  String   @id @default(uuid())
+  game_id             String
+  game                GameSession @relation(fields: [game_id], references: [id], onDelete: Cascade)
+
+  theme_id            String
+  theme               Theme    @relation(fields: [theme_id], references: [id], onDelete: Cascade)
+  
+  player_or_team_name String
+  score               Int      @default(0)
+  mistakes_count      Int      @default(0)
+  time_taken_sec      Int      @default(0)
+  history             String   @default("[]") // JSON stringified array
+  
+  played_at           DateTime @default(now())
+}
+

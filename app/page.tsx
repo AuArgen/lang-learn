@@ -4,6 +4,10 @@ import { Metadata } from 'next';
 import { getServerUser } from '@/lib/auth/server-auth';
 import { headers } from 'next/headers';
 
+// This page queries the database on every request, so opt out of static generation.
+// The SQLite database is not available at Docker build time — only at runtime via volume mount.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'BilimAi - Англисчени Үн менен Оюн аркылуу Үйрөнүңүз',
   description: 'Интерактивдүү үн таануу оюндары менен англис тилин тез жана кызыктуу үйрөнүңүз.',

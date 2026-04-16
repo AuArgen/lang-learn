@@ -4,6 +4,8 @@ import { updateThemeAction } from '@/app/actions/theme-actions';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditThemePage({ params }: { params: { id: string } }) {
   const user = await getServerUser();
   if (!user) return redirect('/themes');

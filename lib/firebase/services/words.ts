@@ -1,7 +1,4 @@
-import { adminDb } from '../admin';
-import * as admin from 'firebase-admin';
-import { themesService } from './themes';
-import { readMockDB, writeMockDB } from './mockDb';
+import prisma from '../../db/prisma';
 
 export interface Word {
   id?: string;
@@ -15,68 +12,54 @@ export interface Word {
 
 export const wordsService = {
   async addWord(data: Omit<Word, 'id'>) {
-    try {
-      const docRef = adminDb.collection('words').doc();
-      const word = { ...data, id: docRef.id };
-      await docRef.set(word);
+    const word = await prisma.word.create({
+      data: {
+        theme_id: data.theme_id,
+        word: data.word,
+        translation: data.translation,
+        language: data.language,
+        audio_url: data.audio_url,
+        is_manual_input: data.is_manual_input || false
+      }
+    });
 
-      // Update count in theme
-      await adminDb.collection('themes').doc(data.theme_id).update({
-        words_count: admin.firestore.FieldValue.increment(1)
-      });
+    await prisma.theme.update({
+      where: { id: data.theme_id },
+      data: {
+        words_count: { increment: 1 }
+      }
+    });
 
-      return word;
-    } catch (error: any) {
-      console.warn('⚠️ Firestore disabled. Adding word to local memory mock.');
-      const db = readMockDB();
-      const newWord = { ...data, id: 'mock-word-' + Date.now() };
-      db.words.push(newWord);
-      writeMockDB(db);
-      themesService.updateMockThemeCount(data.theme_id, 1);
-      return newWord;
-    }
+    return word;
   },
 
   async updateWord(id: string, data: Partial<Word>) {
-    try {
-      await adminDb.collection('words').doc(id).update(data);
-    } catch (error: any) {
-      console.warn('⚠️ Firestore disabled. Updating word in local memory mock.');
-      const db = readMockDB();
-      const wordIndex = db.words.findIndex(w => w.id === id);
-      if (wordIndex > -1) {
-        db.words[wordIndex] = { ...db.words[wordIndex], ...data };
-        writeMockDB(db);
-      }
-    }
+    await prisma.word.update({
+      where: { id },
+      data: {
+        ...data
+      } as any
+    });
   },
 
   async deleteWord(id: string, themeId: string) {
-    try {
-      await adminDb.collection('words').doc(id).delete();
-      await adminDb.collection('themes').doc(themeId).update({
-        words_count: admin.firestore.FieldValue.increment(-1)
-      });
-    } catch (error: any) {
-      console.warn('⚠️ Firestore disabled. Deleting word from local memory mock.');
-      const db = readMockDB();
-      const index = db.words.findIndex(w => w.id === id);
-      if (index > -1) {
-        db.words.splice(index, 1);
-        writeMockDB(db);
+    await prisma.word.delete({
+      where: { id }
+    });
+
+    await prisma.theme.update({
+      where: { id: themeId },
+      data: {
+        words_count: { decrement: 1 }
       }
-      themesService.updateMockThemeCount(themeId, -1);
-    }
+    });
   },
   
   async getWordsByTheme(themeId: string) {
-    try {
-      const snapshot = await adminDb.collection('words').where('theme_id', '==', themeId).get();
-      return snapshot.docs.map(doc => doc.data() as Word);
-    } catch (error: any) {
-      const db = readMockDB();
-      const themeWords = db.words.filter(w => w.theme_id === themeId);
-      return themeWords;
-    }
+    const words = await prisma.word.findMany({
+      where: { theme_id: themeId }
+    });
+    return words as Word[];
   }
 };
+

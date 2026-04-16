@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { adminDb } from '@/lib/firebase/admin';
+import prisma from '@/lib/db/prisma';
 
 export async function getServerUser() {
   const headersList = await headers();
@@ -15,11 +15,15 @@ export async function getServerUser() {
 
 // Logic to check limits for USER
 export async function hasReachedThemeLimit(userId: string) {
-  const userThemes = await adminDb.collection('themes').where('author_id', '==', userId).count().get();
-  return userThemes.data().count >= 1; // Limit is 1
+  const count = await prisma.theme.count({
+    where: { author_id: userId }
+  });
+  return count >= 1; // Limit is 1
 }
 
 export async function hasReachedWordLimit(themeId: string) {
-  const words = await adminDb.collection('words').where('theme_id', '==', themeId).count().get();
-  return words.data().count >= 3; // Limit is 3
+  const count = await prisma.word.count({
+    where: { theme_id: themeId }
+  });
+  return count >= 3; // Limit is 3
 }

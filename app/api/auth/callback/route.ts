@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase/admin';
+import prisma from '@/lib/db/prisma';
 import { signJwtToken } from '@/lib/auth/jwt';
 import { cookies, headers } from 'next/headers';
 
@@ -68,29 +68,28 @@ export async function GET(request: Request) {
 
     const { id: googleId, name, email, role, subscription_expires_at } = externalUserData;
 
-    // 2. Save/Update user in Firebase
+    // 2. Save/Update user in Database
     try {
-      const userRef = adminDb.collection('users').doc(googleId);
+      await prisma.user.upsert({
+        where: { google_id: googleId },
+        update: {
+          name,
+          email,
+          role: role || 'USER',
+          subscription_expires_at: subscription_expires_at ? new Date(subscription_expires_at) : null,
+        },
+        create: {
+          id: googleId, // Keep id same as googleId to match legacy logic
+          google_id: googleId,
+          name,
+          email,
+          role: role || 'USER',
+          subscription_expires_at: subscription_expires_at ? new Date(subscription_expires_at) : null,
+        }
+      });
       
-      // get user to conditionally set created_at
-      const userDoc = await userRef.get();
-      
-      const userDataToUpdate: any = {
-        google_id: googleId,
-        name,
-        email,
-        role: role || 'USER',
-        subscription_expires_at: subscription_expires_at || null,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (!userDoc.exists) {
-        userDataToUpdate.created_at = new Date().toISOString();
-      }
-
-      await userRef.set(userDataToUpdate, { merge: true });
     } catch (dbError) {
-      console.warn('⚠️ Could not save user to Firestore (API might be disabled). Granting temporary session without DB sync.', dbError);
+      console.warn('⚠️ Could not save user to Database.', dbError);
     }
 
     // 3. Generate Custom JWT

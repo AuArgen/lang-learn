@@ -2,6 +2,8 @@ import { themesService } from '@/lib/firebase/services/themes';
 import { getServerUser } from '@/lib/auth/server-auth';
 import ThemesClient from './ThemesClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ThemesPage() {
   const user = await getServerUser();
   if (!user) return <div>Сураныч, системге кириңиз.</div>;

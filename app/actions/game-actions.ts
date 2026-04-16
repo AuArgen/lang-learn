@@ -12,7 +12,7 @@ export async function createGameSessionAction(themeId: string, mode: 'solo' | 't
     is_public_link: isPublicLink,
     status: 'playing' // directly playing for simplicity
   });
-  return game.id;
+  return game.id as string;
 }
 
 export async function saveGameResultAction(gameId: string, themeId: string, playerName: string, score: number, mistakes: number, timeTakenSec: number = 0, history: any[] = []) {

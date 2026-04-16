@@ -1,7 +1,9 @@
 import { getServerUser } from '@/lib/auth/server-auth';
-import { adminDb } from '@/lib/firebase/admin';
+import prisma from '@/lib/db/prisma';
 import { approveThemeAction, rejectThemeAction } from '@/app/actions/admin-actions';
 import { redirect } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 
 export default async function ReportsPage() {
   const user = await getServerUser();
@@ -13,17 +15,16 @@ export default async function ReportsPage() {
   }
 
   // Get results
-  const resultsSnapshot = await adminDb.collection('game_results')
-    .orderBy('played_at', 'desc')
-    .limit(50)
-    .get();
-    
-  const results = resultsSnapshot.docs.map(doc => doc.data());
+  const results = await prisma.gameResult.findMany({
+    orderBy: { played_at: 'desc' },
+    take: 50
+  });
 
   let pendingThemes: any[] = [];
   if (isAdmin) {
-    const pendingSnapshot = await adminDb.collection('themes').where('status', '==', 'pending').get();
-    pendingThemes = pendingSnapshot.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    pendingThemes = await prisma.theme.findMany({
+      where: { status: 'pending' }
+    });
   }
 
   return (
