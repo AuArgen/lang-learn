@@ -22,7 +22,7 @@ export default async function HomePage() {
   const themes = await themesService.getPublishedThemes();
   const user = await getServerUser();
 
-  const headersList = headers();
+  const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
   const appUrl = `${protocol}://${host}`;
