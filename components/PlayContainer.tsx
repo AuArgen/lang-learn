@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { createGameSessionAction, saveGameResultAction } from '@/app/actions/game-actions';
 
 declare global {
@@ -36,6 +37,7 @@ const getLangSpeakLabel = (code: string) => {
 };
 
 export default function PlayContainer({ theme, words, themeId }: PlayContainerProps) {
+  const router = useRouter();
   const themeLangCode = theme?.language || 'en';
   const [stage, setStage] = useState<'lobby' | 'countdown' | 'playing' | 'finished'>('lobby');
   const [mode, setMode] = useState<'solo' | 'team'>('solo');
@@ -446,6 +448,17 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
         <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
+          {/* Back button */}
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-6 font-medium"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Артка
+          </button>
+
           <h1 className="text-3xl font-extrabold text-center text-slate-800 mb-2">{theme.title}</h1>
           <p className="text-center text-slate-500 mb-8">{theme.description}</p>
 
