@@ -10,6 +10,7 @@ export interface Word {
   translation: string;
   language: string;
   audio_url?: string;
+  is_manual_input?: boolean;
 }
 
 export const wordsService = {
