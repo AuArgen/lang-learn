@@ -10,6 +10,7 @@ export async function addWordAction(themeId: string, formData: FormData) {
 
   const word = formData.get('word') as string;
   const translation = formData.get('translation') as string;
+  const isManualInput = formData.get('is_manual_input') === 'on';
 
   if (user.role === 'USER') {
     const limitReached = await hasReachedWordLimit(themeId);
@@ -32,6 +33,7 @@ export async function addWordAction(themeId: string, formData: FormData) {
     word: word.trim(),
     translation: translation.trim(),
     language: 'kg', // can be dynamic
+    is_manual_input: isManualInput,
   });
 
   revalidatePath(`/themes/${themeId}`);
@@ -51,6 +53,7 @@ export async function updateWordAction(wordId: string, themeId: string, formData
 
   const word = formData.get('word') as string;
   const translation = formData.get('translation') as string;
+  const isManualInput = formData.get('is_manual_input') === 'on';
 
   const existingWords = await wordsService.getWordsByTheme(themeId);
   const isDuplicate = existingWords.some(w => 
@@ -66,6 +69,7 @@ export async function updateWordAction(wordId: string, themeId: string, formData
   await wordsService.updateWord(wordId, {
     word: word.trim(),
     translation: translation.trim(),
+    is_manual_input: isManualInput,
   });
 
   revalidatePath(`/themes/${themeId}`);

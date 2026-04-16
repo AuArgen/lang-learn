@@ -42,7 +42,26 @@ export async function requestPublicationAction(id: string) {
   const user = await getServerUser();
   if (!user || user.role === 'USER') throw new Error("Unauthorized");
   
-  await themesService.updateTheme(id, { status: 'pending' });
+  // Directly publishing for now so it appears on the homepage without an admin approval panel
+  await themesService.updateTheme(id, { status: 'published' });
+  revalidatePath('/themes');
+  revalidatePath('/');
+}
+
+export async function unpublishThemeAction(id: string) {
+  const user = await getServerUser();
+  const userRole = user?.role?.toUpperCase() || 'USER';
+  const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRATOR';
+  
+  // Actually, authors (PRO/TEACHER) should be able to unpublish their own themes as well.
+  if (!isAdmin) {
+    const theme = await themesService.getTheme(id);
+    if (!theme || theme.author_id !== user?.userId) {
+      throw new Error("Сиз бул теманы публикациядан ала албайсыз.");
+    }
+  }
+
+  await themesService.updateTheme(id, { status: 'draft' });
   revalidatePath('/themes');
 }
 

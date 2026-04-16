@@ -56,9 +56,15 @@ export default async function HomePage() {
               оюн менен укмуштуудай!
             </span>
           </h1>
-          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto mb-6">
             Сиздин үнүңүздү түшүнгөн жасалма интеллект. Тема тандаңыз, микрофонду басыңыз жана сөздөрдү туура айтуу менен упай топтоңуз.
           </p>
+          <div className="inline-flex items-center gap-3 bg-indigo-50 border border-indigo-100 px-6 py-4 rounded-2xl text-left max-w-3xl">
+            <span className="text-3xl">💡</span>
+            <p className="text-sm md:text-base text-indigo-900 font-medium leading-relaxed">
+              <strong>BilimAi Learn Lang</strong> — бул <a href="https://bilimai.kg" className="text-indigo-600 underline hover:text-indigo-700">BilimAi</a> экосистемасынын тил үйрөнүүгө арналган кошумча сервиси. Бул долбоор окуучулардын сөздүк запасын кеңейтип, туура сүйлөө (айтылыш) көндүмдөрүн оюн аркылуу өнүктүрүүнү көздөйт.
+            </p>
+          </div>
         </div>
 
         <div>
@@ -84,6 +90,37 @@ export default async function HomePage() {
                 <p className="text-lg text-slate-500">Азырынча жалпыга ачык оюндар жок.</p>
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="mt-20">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            🔗 Сервистер
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 animate-in fade-in duration-1000 delay-300 fill-mode-both">
+            <a href="https://bilimai.kg" target="_blank" rel="noopener noreferrer" className="group flex flex-col bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center font-bold text-xl mb-4 group-hover:scale-110 transition-transform">
+                🌐
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">BilimAi</h3>
+              <p className="text-slate-500 text-sm mb-4">Билим берүү жана жасалма интеллект боюнча башкы платформабызга өтүңүз.</p>
+              <div className="mt-auto flex items-center justify-between text-sm font-medium">
+                <span className="text-slate-400">bilimai.kg</span>
+                <span className="text-blue-600 group-hover:text-blue-700">Ачып көрүү &rarr;</span>
+              </div>
+            </a>
+            
+            <a href="https://plus.bilimai.kg" target="_blank" rel="noopener noreferrer" className="group flex flex-col bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center font-bold text-xl mb-4 group-hover:scale-110 transition-transform">
+                ✨
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">BilimAi Plus</h3>
+              <p className="text-slate-500 text-sm mb-4">Кеңейтилген мүмкүнчүлүктөр жана кошумча куралдар камтылган премиум кызматтар.</p>
+              <div className="mt-auto flex items-center justify-between text-sm font-medium">
+                <span className="text-slate-400">plus.bilimai.kg</span>
+                <span className="text-purple-600 group-hover:text-purple-700">Ачып көрүү &rarr;</span>
+              </div>
+            </a>
           </div>
         </div>
       </main>

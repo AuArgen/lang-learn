@@ -5,9 +5,9 @@
       "title": "f",
       "description": "f",
       "language": "en",
-      "status": "pending",
+      "status": "published",
       "id": "mock-theme-1776068114487",
-      "words_count": 3,
+      "words_count": 11,
       "created_at": "2026-04-13T08:15:14.487Z"
     },
     {
@@ -91,6 +91,70 @@
       "translation": "Алма",
       "language": "kg",
       "id": "mock-word-1776071065093"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "How are you",
+      "translation": "Кандайсын",
+      "language": "kg",
+      "is_manual_input": true,
+      "id": "mock-word-1776314011632"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "What is your name",
+      "translation": "Атыныз ким",
+      "language": "kg",
+      "is_manual_input": false,
+      "id": "mock-word-1776314038564"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "Apple",
+      "translation": "Apple",
+      "language": "kg",
+      "is_manual_input": false,
+      "id": "mock-word-1776314530478"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "Banana",
+      "translation": "Banana",
+      "language": "kg",
+      "is_manual_input": false,
+      "id": "mock-word-1776314538346"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "Pen",
+      "translation": "pen",
+      "language": "kg",
+      "is_manual_input": false,
+      "id": "mock-word-1776314543861"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "max",
+      "translation": "max",
+      "language": "kg",
+      "is_manual_input": false,
+      "id": "mock-word-1776314552137"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "min",
+      "translation": "min",
+      "language": "kg",
+      "is_manual_input": false,
+      "id": "mock-word-1776314557503"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "word": "second",
+      "translation": "second",
+      "language": "kg",
+      "is_manual_input": false,
+      "id": "mock-word-1776314566522"
     }
   ],
   "games": [
@@ -192,6 +256,96 @@
       "status": "playing",
       "id": "mock-game-1776140281427",
       "created_at": "2026-04-14T04:18:01.427Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776272622537",
+      "created_at": "2026-04-15T17:03:42.537Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776273364506",
+      "created_at": "2026-04-15T17:16:04.506Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776314114172",
+      "created_at": "2026-04-16T04:35:14.172Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776314372033",
+      "created_at": "2026-04-16T04:39:32.033Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776314611337",
+      "created_at": "2026-04-16T04:43:31.337Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776317917997",
+      "created_at": "2026-04-16T05:38:37.997Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776317989497",
+      "created_at": "2026-04-16T05:39:49.497Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": "104238352717501962613",
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776318195342",
+      "created_at": "2026-04-16T05:43:15.342Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": null,
+      "mode": "solo",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776318585577",
+      "created_at": "2026-04-16T05:49:45.577Z"
+    },
+    {
+      "theme_id": "mock-theme-1776068114487",
+      "host_id": null,
+      "mode": "team",
+      "is_public_link": true,
+      "status": "playing",
+      "id": "mock-game-1776318672087",
+      "created_at": "2026-04-16T05:51:12.087Z"
     }
   ],
   "game_results": [
@@ -275,6 +429,361 @@
       "score": 20,
       "mistakes_count": 0,
       "played_at": "2026-04-14T04:18:34.261Z"
+    },
+    {
+      "id": "mock-result-1776272645006",
+      "game_id": "mock-game-1776272622537",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Fhuty",
+      "score": 20,
+      "mistakes_count": 0,
+      "played_at": "2026-04-15T17:04:05.006Z"
+    },
+    {
+      "id": "mock-result-1776273386709",
+      "game_id": "mock-game-1776273364506",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Fhuty",
+      "score": 20,
+      "mistakes_count": 1,
+      "played_at": "2026-04-15T17:16:26.710Z"
+    },
+    {
+      "id": "mock-result-1776314178147",
+      "game_id": "mock-game-1776314114172",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Фыф",
+      "score": 20,
+      "mistakes_count": 9,
+      "played_at": "2026-04-16T04:36:18.147Z"
+    },
+    {
+      "id": "mock-result-1776314406532",
+      "game_id": "mock-game-1776314372033",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "аа",
+      "score": 40,
+      "mistakes_count": 0,
+      "played_at": "2026-04-16T04:40:06.532Z"
+    },
+    {
+      "id": "mock-result-1776314677916",
+      "game_id": "mock-game-1776314611337",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "fhuty",
+      "score": 50,
+      "mistakes_count": 7,
+      "time_taken_sec": 60,
+      "history": [
+        {
+          "word": "min",
+          "translation": "min",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "second",
+          "translation": "second",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "max",
+          "translation": "max",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "two",
+          "translation": "2",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "Apple",
+          "translation": "Apple",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        }
+      ],
+      "played_at": "2026-04-16T04:44:37.916Z"
+    },
+    {
+      "id": "mock-result-1776317985031",
+      "game_id": "mock-game-1776317917997",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Асан",
+      "score": 70,
+      "mistakes_count": 8,
+      "time_taken_sec": 60,
+      "history": [
+        {
+          "word": "What is your name",
+          "translation": "Атыныз ким",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "two",
+          "translation": "2",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "max",
+          "translation": "max",
+          "isCorrect": false,
+          "mistakes_made": 2,
+          "inputs": [
+            "knox",
+            "maps"
+          ]
+        },
+        {
+          "word": "min",
+          "translation": "min",
+          "isCorrect": false,
+          "mistakes_made": 1,
+          "inputs": [
+            "mean"
+          ]
+        },
+        {
+          "word": "Banana",
+          "translation": "Banana",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "Apple",
+          "translation": "Apple",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "How are you",
+          "translation": "Кандайсын",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "second",
+          "translation": "second",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "Hello",
+          "translation": "Салам",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        }
+      ],
+      "played_at": "2026-04-16T05:39:45.031Z"
+    },
+    {
+      "id": "mock-result-1776318211204",
+      "game_id": "mock-game-1776318195342",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "арген",
+      "score": 10,
+      "mistakes_count": 9,
+      "time_taken_sec": 7,
+      "history": [
+        {
+          "word": "Hello",
+          "translation": "Салам",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "Pen",
+          "translation": "pen",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "How are you",
+          "translation": "Кандайсын",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "one",
+          "translation": "1",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "max",
+          "translation": "max",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "What is your name",
+          "translation": "Атыныз ким",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "second",
+          "translation": "second",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "two",
+          "translation": "2",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "Apple",
+          "translation": "Apple",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "Banana",
+          "translation": "Banana",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "min",
+          "translation": "min",
+          "isCorrect": false,
+          "mistakes_made": 0,
+          "inputs": []
+        }
+      ],
+      "played_at": "2026-04-16T05:43:31.204Z"
+    },
+    {
+      "id": "mock-result-1776318651989",
+      "game_id": "mock-game-1776318585577",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "А",
+      "score": 50,
+      "mistakes_count": 7,
+      "time_taken_sec": 60,
+      "history": [
+        {
+          "word": "Banana",
+          "translation": "Banana",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "second",
+          "translation": "second",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "max",
+          "translation": "max",
+          "isCorrect": false,
+          "mistakes_made": 4,
+          "inputs": [
+            "maps",
+            "mh",
+            "when is",
+            "mox"
+          ]
+        },
+        {
+          "word": "one",
+          "translation": "1",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "min",
+          "translation": "min",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        },
+        {
+          "word": "two",
+          "translation": "2",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": []
+        }
+      ],
+      "played_at": "2026-04-16T05:50:51.989Z"
+    },
+    {
+      "id": "mock-result-1776318737758",
+      "game_id": "mock-game-1776318672087",
+      "theme_id": "mock-theme-1776068114487",
+      "player_or_team_name": "Команда 1 (Упай: 10) vs Команда 2 (Упай: 30)",
+      "score": 30,
+      "mistakes_count": 0,
+      "time_taken_sec": 60,
+      "history": [
+        {
+          "word": "min",
+          "translation": "min",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": [],
+          "answeredBy": "team1"
+        },
+        {
+          "word": "two",
+          "translation": "2",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": [],
+          "answeredBy": "team2"
+        },
+        {
+          "word": "Apple",
+          "translation": "Apple",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": [],
+          "answeredBy": "team2"
+        },
+        {
+          "word": "What is your name",
+          "translation": "Атыныз ким",
+          "isCorrect": true,
+          "mistakes_made": 0,
+          "inputs": [],
+          "answeredBy": "team2"
+        }
+      ],
+      "played_at": "2026-04-16T05:52:17.758Z"
     }
   ]
 }

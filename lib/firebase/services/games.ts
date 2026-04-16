@@ -36,7 +36,7 @@ export const gamesService = {
     }
   },
   
-  async saveResult(gameId: string, themeId: string, playerName: string, score: number, mistakes: number) {
+  async saveResult(gameId: string, themeId: string, playerName: string, score: number, mistakes: number, timeTakenSec: number = 0, history: any[] = []) {
     try {
       const docRef = adminDb.collection('game_results').doc();
       await docRef.set({
@@ -46,6 +46,8 @@ export const gamesService = {
         player_or_team_name: playerName,
         score,
         mistakes_count: mistakes,
+        time_taken_sec: timeTakenSec,
+        history,
         played_at: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -58,9 +60,27 @@ export const gamesService = {
         player_or_team_name: playerName,
         score,
         mistakes_count: mistakes,
+        time_taken_sec: timeTakenSec,
+        history,
         played_at: new Date().toISOString(),
       });
       writeMockDB(db);
+    }
+  },
+
+  async getResultsByTheme(themeId: string) {
+    try {
+      const snapshot = await adminDb.collection('game_results')
+        .where('theme_id', '==', themeId)
+        .orderBy('played_at', 'desc')
+        .get();
+      return snapshot.docs.map(doc => doc.data());
+    } catch (error: any) {
+      console.warn('⚠️ Firestore disabled. Fetching game results from local memory mock.');
+      const db = readMockDB();
+      return db.game_results
+        .filter(r => r.theme_id === themeId)
+        .sort((a, b) => new Date(b.played_at).getTime() - new Date(a.played_at).getTime());
     }
   }
 };

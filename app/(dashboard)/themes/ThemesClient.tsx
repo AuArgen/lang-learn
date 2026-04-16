@@ -1,10 +1,10 @@
 'use client';
 
 import { Theme, POPULAR_LANGUAGES } from '@/lib/types/theme';
-import { createThemeAction, deleteThemeAction, requestPublicationAction, updateThemeAction } from '@/app/actions/theme-actions';
+import { createThemeAction, deleteThemeAction, requestPublicationAction, updateThemeAction, unpublishThemeAction } from '@/app/actions/theme-actions';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { Play, Plus, Edit, Trash2, Send, CheckCircle, Info } from 'lucide-react';
+import { Play, Plus, Edit, Trash2, Send, CheckCircle, Info, History } from 'lucide-react';
 
 export default function ThemesClient({ themes }: { themes: Theme[] }) {
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
@@ -176,6 +176,14 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                           >
                             <Plus className="w-4 h-4" />
                           </Link>
+
+                          <Link 
+                            href={`/themes/${theme.id}/history`} 
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            title="История"
+                          >
+                            <History className="w-4 h-4" />
+                          </Link>
                           
                           <Link 
                             href={`/play/${theme.id}`} 
@@ -188,12 +196,39 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
 
                         {/* Публикацияга жиберүү баскычы ылдыйда */}
                         {theme.status === 'draft' && (
-                          <form action={requestPublicationAction.bind(null, theme.id!)} className="mt-1">
+                          <form 
+                            action={async () => {
+                              if ((theme.words_count || 0) < 10) {
+                                alert("Публикация кылуу үчүн кеминде 10 сөз болуусу керек!");
+                                return;
+                              }
+                              await requestPublicationAction(theme.id!);
+                            }} 
+                            className="mt-1"
+                          >
                             <button 
                               type="submit"
                               className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 shadow-sm text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all"
                             >
                               <Send className="w-3.5 h-3.5 mr-1.5" /> Публикациялоо
+                            </button>
+                          </form>
+                        )}
+
+                        {(theme.status === 'published' || theme.status === 'pending') && (
+                          <form 
+                            action={async () => {
+                                if (confirm("Чын эле публикациядан алабызбы? Тема кайрадан каралоо (draft) статусуна өтөт.")) {
+                                  await unpublishThemeAction(theme.id!);
+                                }
+                            }} 
+                            className="mt-1"
+                          >
+                            <button 
+                              type="submit"
+                              className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-white border border-red-200 shadow-sm text-red-600 hover:text-red-700 hover:border-red-300 hover:bg-red-50 focus:ring-2 focus:ring-red-200 rounded-lg transition-all"
+                            >
+                              <Info className="w-3.5 h-3.5 mr-1.5" /> Публикациядан алуу
                             </button>
                           </form>
                         )}

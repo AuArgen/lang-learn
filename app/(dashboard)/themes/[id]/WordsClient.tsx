@@ -106,6 +106,19 @@ export default function WordsClient({
                   placeholder="Котормосу" 
                 />
               </div>
+
+              <div className="flex flex-row items-center gap-2 pt-2">
+                <input 
+                  type="checkbox" 
+                  name="is_manual_input" 
+                  id="is_manual_input"
+                  defaultChecked={editingWord?.is_manual_input || false}
+                  className="w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500" 
+                />
+                <label htmlFor="is_manual_input" className="text-sm font-semibold text-slate-700 select-none cursor-pointer">
+                  Кол менен текст терип киргизүү (Голос менен эмес)
+                </label>
+              </div>
               
               <div className="flex gap-3 pt-2">
                 <button type="submit" className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm hover:shadow transition-all active:scale-95 flex items-center justify-center">
@@ -161,7 +174,10 @@ export default function WordsClient({
               return (
                 <li key={w.id} className={`p-4 flex items-center justify-between transition-colors ${isSelected ? 'bg-indigo-50/50 border-l-4 border-l-indigo-500' : 'hover:bg-slate-50/50 border-l-4 border-l-transparent'}`}>
                   <div className="px-1">
-                    <p className="font-bold text-slate-800 text-base">{w.word}</p>
+                    <p className="font-bold text-slate-800 text-base">
+                      {w.word}
+                      {w.is_manual_input && <span className="ml-2 inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded border border-indigo-200">Текст</span>}
+                    </p>
                     <p className="text-sm text-slate-500 mt-0.5">{w.translation}</p>
                   </div>
                   <div className="flex items-center gap-1.5">

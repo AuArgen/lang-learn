@@ -113,13 +113,6 @@ export const themesService = {
       const db = readMockDB();
       const published = db.themes.filter(t => t.status === 'published');
       
-      if (published.length === 0) {
-        return [
-          { id: 'mock-1', title: 'Action Words 🏃‍♂️', description: 'Basic verbs for everyday actions', words_count: 12, status: 'published' },
-          { id: 'mock-2', title: 'Food & Drinks 🍎', description: 'Common fruits, vegetables, and beverages', words_count: 15, status: 'published' },
-          { id: 'mock-3', title: 'Colors & Shapes 🔴', description: 'Learn to describe the visual world', words_count: 10, status: 'published' }
-        ] as any[];
-      }
       return published;
     }
   }

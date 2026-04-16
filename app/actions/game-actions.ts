@@ -15,6 +15,6 @@ export async function createGameSessionAction(themeId: string, mode: 'solo' | 't
   return game.id;
 }
 
-export async function saveGameResultAction(gameId: string, themeId: string, playerName: string, score: number, mistakes: number) {
-  await gamesService.saveResult(gameId, themeId, playerName, score, mistakes);
+export async function saveGameResultAction(gameId: string, themeId: string, playerName: string, score: number, mistakes: number, timeTakenSec: number = 0, history: any[] = []) {
+  await gamesService.saveResult(gameId, themeId, playerName, score, mistakes, timeTakenSec, history);
 }
