@@ -4,6 +4,7 @@ import { getServerUser } from '@/lib/auth/server-auth';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const user = await getServerUser();
+  const isAdmin = user?.role?.toUpperCase() === 'ADMIN' || user?.role?.toUpperCase() === 'ADMINISTRATOR';
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-slate-50">
@@ -18,6 +19,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <Link href="/" className="text-slate-700 font-medium hover:text-indigo-600 hover:bg-slate-100 p-3 rounded-xl transition duration-200">
           Бардык оюндар (Home)
         </Link>
+        
+        {isAdmin && (
+          <Link href="/admin" className="text-indigo-700 font-bold bg-indigo-50 hover:bg-indigo-100 p-3 rounded-xl transition duration-200 mt-2">
+            Админ Панель
+          </Link>
+        )}
 
         <div className="mt-auto pt-6 border-t border-slate-100 space-y-1">
           <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Профиль</p>
