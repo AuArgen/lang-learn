@@ -64,7 +64,7 @@ export default async function HomePage() {
 
       <main className="flex-1 max-w-6xl mx-auto px-4 py-12 w-full">
         <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
+          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight mb-4">
             Тил үйрөнүү эми <br className="hidden md:block"/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
               оюн менен укмуштуудай!
