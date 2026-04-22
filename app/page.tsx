@@ -86,6 +86,31 @@ export default async function HomePage() {
               <strong>BilimAi Learn Lang</strong> — {t('aboutProject')}
             </p>
           </div>
+          
+          <div className="mt-8 flex flex-col sm:flex-row gap-6 justify-center animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 mx-auto max-w-3xl">
+            <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm text-left flex-1">
+              <h3 className="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+                <span className="text-2xl">🆓</span> {t('freePlan')}
+              </h3>
+              <ul className="text-slate-600 space-y-3 font-medium text-sm">
+                <li className="flex items-start gap-2"><span className="text-green-500 text-base leading-none">✓</span> {t('freePlanFeature1')}</li>
+                <li className="flex items-start gap-2"><span className="text-green-500 text-base leading-none">✓</span> {t('freePlanFeature2')}</li>
+                <li className="flex items-start gap-2"><span className="text-green-500 text-base leading-none">✓</span> {t('freePlanFeature3')}</li>
+              </ul>
+            </div>
+            
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 p-6 rounded-3xl shadow-sm text-left flex-1 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-indigo-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg tracking-wider">PRO</div>
+              <h3 className="font-bold text-indigo-900 text-lg mb-4 flex items-center gap-2">
+                <span className="text-2xl">⭐</span> {t('proPlan')}
+              </h3>
+              <ul className="text-indigo-800 space-y-3 font-medium text-sm">
+                <li className="flex items-start gap-2"><span className="text-indigo-500 text-base leading-none">✓</span> {t('proPlanFeature1')}</li>
+                <li className="flex items-start gap-2"><span className="text-indigo-500 text-base leading-none">✓</span> {t('proPlanFeature2')}</li>
+                <li className="flex items-start gap-2"><span className="text-indigo-500 text-base leading-none">✓</span> {t('proPlanFeature3')}</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div>

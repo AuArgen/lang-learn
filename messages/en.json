@@ -13,7 +13,15 @@
     "noGames": "No public games yet.",
     "services": "Services",
     "explore": "Explore →",
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "freePlan": "Public features",
+    "freePlanFeature1": "Play games without registration",
+    "freePlanFeature2": "Create themes and add words",
+    "freePlanFeature3": "Share game link with friends",
+    "proPlan": "For registered users",
+    "proPlanFeature1": "Add unlimited words",
+    "proPlanFeature2": "Publish games to the public",
+    "proPlanFeature3": "Convenient theme management"
   },
   "DashboardNav": {
     "themes": "My Themes",
