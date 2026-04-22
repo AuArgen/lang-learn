@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createGameSessionAction, saveGameResultAction } from '@/app/actions/game-actions';
+import { useTranslations } from 'next-intl';
 
 declare global {
   interface Window {
@@ -38,12 +39,13 @@ const getLangSpeakLabel = (code: string) => {
 
 export default function PlayContainer({ theme, words, themeId }: PlayContainerProps) {
   const router = useRouter();
+  const t = useTranslations('PlayGame');
   const themeLangCode = theme?.language || 'en';
   const [stage, setStage] = useState<'lobby' | 'countdown' | 'playing' | 'finished'>('lobby');
   const [mode, setMode] = useState<'solo' | 'team'>('solo');
   const [playerName, setPlayerName] = useState('');
-  const [team1Name, setTeam1Name] = useState('Команда 1');
-  const [team2Name, setTeam2Name] = useState('Команда 2');
+  const [team1Name, setTeam1Name] = useState(t('team1Default'));
+  const [team2Name, setTeam2Name] = useState(t('team2Default'));
   const [gameId, setGameId] = useState<string | null>(null);
 
   // Shared Logic state
@@ -98,25 +100,28 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
           setIsListening(false);
         };
       } else {
-        alert("Сиздин браузериңиз үн таанууну (Speech API) колдобойт. Google Chrome сунушталат.");
+        alert(t('speechNotSupported'));
       }
     }
-  }, [currentWordIndex, themeLangCode, stage, gameWords, turnState, answeringTeam]);
+  }, [currentWordIndex, themeLangCode, stage, gameWords, turnState, answeringTeam, t]);
 
   useEffect(() => {
-    let t: any;
+    let tTimer: any;
     const currentWordInfo = gameWords[currentWordIndex];
     const canListen = mode === 'solo' || (mode === 'team' && turnState === 'answering');
     
-    if (stage === 'playing' && currentWordInfo && !currentWordInfo.is_manual_input && isAutoListen && !isListening && !feedbackMsg.includes('Туура') && canListen) {
-      t = setTimeout(() => {
+    // Check if feedback contains success translation (to not auto listen again if correct)
+    const isSuccess = feedbackMsg.includes(t('correctFeedback').replace(' 🎉', ''));
+    
+    if (stage === 'playing' && currentWordInfo && !currentWordInfo.is_manual_input && isAutoListen && !isListening && !isSuccess && canListen) {
+      tTimer = setTimeout(() => {
         if (!isListening && stage === 'playing') {
           startListening();
         }
       }, 800);
     }
-    return () => clearTimeout(t);
-  }, [isListening, isAutoListen, stage, feedbackMsg, gameWords, currentWordIndex, mode, turnState]);
+    return () => clearTimeout(tTimer);
+  }, [isListening, isAutoListen, stage, feedbackMsg, gameWords, currentWordIndex, mode, turnState, t]);
 
   useEffect(() => {
     let timer: any;
@@ -169,7 +174,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
   }, [stage, mode, turnState, nextWordCountdown, currentWordIndex, gameWords.length, gameHistory]);
 
   const startGame = async () => {
-    if (mode === 'solo' && !playerName) return alert("Атыңызды жазыңыз!");
+    if (mode === 'solo' && !playerName) return alert(t('enterNameAlert'));
     // create session
     const gId = await createGameSessionAction(themeId, mode, true);
     setGameId(gId);
@@ -313,7 +318,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
     
     if (normTranscript.includes(normWord) || normWord.includes(normTranscript)) {
       playSound('correct');
-      setFeedbackMsg('Туура! 🎉');
+      setFeedbackMsg(t('correctFeedback'));
       if (mode === 'team') {
         if (answeringTeam === 'team1') setTeam1Score(s => s + 10);
         else if (answeringTeam === 'team2') setTeam2Score(s => s + 10);
@@ -324,10 +329,10 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
     } else {
       playSound('error');
       
-      let msg = `Ката: Сиз "${transcript}" дедиңиз. Кайра аракет кылыңыз.`;
+      let msg = t('errorSpoken', { transcript });
       let willSkip = wordMistakes + 1 >= 3;
       if (willSkip) {
-        msg = `Сиз 3 жолу ката айттыңыз. Кийинки сөзгө өттүк.`;
+        msg = t('errorSkipMaxMistakes');
       }
       
       setFeedbackMsg(msg);
@@ -363,7 +368,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
 
     if (normTranscript === normWord || normTranscript.includes(normWord)) {
       playSound('correct');
-      setFeedbackMsg('Туура! 🎉');
+      setFeedbackMsg(t('correctFeedback'));
       if (mode === 'team') {
         if (answeringTeam === 'team1') setTeam1Score(s => s + 10);
         else if (answeringTeam === 'team2') setTeam2Score(s => s + 10);
@@ -374,10 +379,10 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
     } else {
       playSound('error');
       
-      let msg = `Ката: Сиз "${transcript}" деп жаздыңыз. Кайра аракет кылыңыз.`;
+      let msg = t('errorWritten', { transcript });
       let willSkip = wordMistakes + 1 >= 3;
       if (willSkip) {
-        msg = `Сиз 3 жолу ката жаздыңыз. Кийинки сөзгө өттүк.`;
+        msg = t('errorWrittenSkip');
       }
 
       setFeedbackMsg(msg);
@@ -410,7 +415,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
 
   const speakWord = () => {
     if (!('speechSynthesis' in window)) {
-      return alert("Сиздин браузериңиз үн чыгарууну колдобойт.");
+      return alert(t('ttsNotSupported'));
     }
     const currentWord = gameWords[currentWordIndex].word;
     const utterance = new SpeechSynthesisUtterance(currentWord);
@@ -456,7 +461,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Артка
+            {t('back')}
           </button>
 
           <h1 className="text-3xl font-extrabold text-center text-slate-800 mb-2">{theme.title}</h1>
@@ -464,43 +469,43 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
 
           <div className="space-y-6">
             <div className="flex bg-slate-100 p-1 rounded-xl">
-              <button onClick={() => setMode('solo')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${mode === 'solo' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>Жеке оюн</button>
-              <button onClick={() => setMode('team')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${mode === 'team' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>Командалык</button>
+              <button onClick={() => setMode('solo')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${mode === 'solo' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>{t('modeSolo')}</button>
+              <button onClick={() => setMode('team')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${mode === 'team' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}>{t('modeTeam')}</button>
             </div>
 
             {mode === 'solo' ? (
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Атыңызды жазыңыз</label>
-                <input value={playerName} onChange={e => setPlayerName(e.target.value)} className="w-full px-5 py-3 text-slate-900 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-indigo-400 focus:ring-0 outline-none transition font-medium" placeholder="Мисалы: Асан" />
+                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('enterNameLabel')}</label>
+                <input value={playerName} onChange={e => setPlayerName(e.target.value)} className="w-full px-5 py-3 text-slate-900 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-indigo-400 focus:ring-0 outline-none transition font-medium" placeholder={t('namePlaceholder')} />
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Команда 1</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">{t('team1Default')}</label>
                   <input value={team1Name} onChange={e => setTeam1Name(e.target.value)} className="w-full px-5 py-3 text-slate-900 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-indigo-400 outline-none transition font-medium" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Команда 2</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">{t('team2Default')}</label>
                   <input value={team2Name} onChange={e => setTeam2Name(e.target.value)} className="w-full px-5 py-3 text-slate-900 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-indigo-400 outline-none transition font-medium" />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Оюндун убактысы</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">{t('gameTimeLabel')}</label>
               <select 
                 value={selectedTimeSec} 
                 onChange={(e) => setSelectedTimeSec(Number(e.target.value))}
                 className="w-full px-5 py-3 text-slate-900 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-indigo-400 focus:ring-0 outline-none transition font-medium appearance-none"
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(m => (
-                  <option key={m} value={m * 60}>{m} мүнөт</option>
+                  <option key={m} value={m * 60}>{t('minutes', { m })}</option>
                 ))}
               </select>
             </div>
 
             <button onClick={startGame} className="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 text-lg">
-              Оюнду Баштоо 🚀
+              {t('startBtn')}
             </button>
           </div>
         </div>
@@ -511,9 +516,9 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
   if (stage === 'countdown') {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center flex-col space-y-8">
-         <p className="text-slate-400 text-3xl font-bold animate-pulse">Оюн башталууда...</p>
+         <p className="text-slate-400 text-3xl font-bold animate-pulse">{t('gameStarting')}</p>
          <div key={countdownValue} className="text-[12rem] leading-none font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-cyan-400 animate-bounce">
-           {countdownValue > 0 ? countdownValue : 'GO!'}
+           {countdownValue > 0 ? countdownValue : t('go')}
          </div>
       </div>
     );
@@ -527,7 +532,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
       <div className="min-h-screen bg-slate-900 text-white flex flex-col justify-between p-4 md:p-10 font-sans relative overflow-hidden">
         {mode === 'team' && turnState === 'next_countdown' && (
           <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex items-center justify-center flex-col">
-            <h2 className="text-4xl text-slate-300 font-bold mb-8">Кийинки сөзгө даярдангыла...</h2>
+            <h2 className="text-4xl text-slate-300 font-bold mb-8">{t('prepareNextWord')}</h2>
             <div key={nextWordCountdown} className="text-[15rem] leading-none font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-cyan-400 animate-bounce">
                {nextWordCountdown}
             </div>
@@ -538,24 +543,24 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
         <div className="flex justify-between items-center bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl mx-auto w-full max-w-5xl z-10">
           {mode === 'solo' ? (
             <>
-              <div className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">Упай: {score}</div>
+              <div className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{t('score', { score })}</div>
               <div className={`text-2xl font-black ${isTimerRed ? 'text-red-500 animate-pulse' : 'text-white'}`}>
                 {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
               </div>
-              <div className="text-xl font-bold text-red-400">Каталар: {mistakes}</div>
+              <div className="text-xl font-bold text-red-400">{t('mistakes', { count: mistakes })}</div>
             </>
           ) : (
             <>
               <div className="text-lg font-bold text-blue-400 flex flex-col items-start leading-tight">
                 <span>{team1Name}</span>
-                <span className="text-2xl text-blue-300">Упай: {team1Score}</span>
+                <span className="text-2xl text-blue-300">{t('score', { score: team1Score })}</span>
               </div>
               <div className={`text-3xl font-black ${isTimerRed ? 'text-red-500 animate-pulse' : 'text-white'} mx-4`}>
                 {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
               </div>
               <div className="text-lg font-bold text-pink-400 flex flex-col items-end leading-tight">
                 <span>{team2Name}</span>
-                <span className="text-2xl text-pink-300">Упай: {team2Score}</span>
+                <span className="text-2xl text-pink-300">{t('score', { score: team2Score })}</span>
               </div>
             </>
           )}
@@ -564,7 +569,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
         {/* Word Display as Stacked Cards */}
         <div className="flex-1 flex flex-col items-center justify-center text-center px-4 mb-4 z-10 mt-8">
           <div className="bg-indigo-500/20 text-indigo-300 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-widest border border-indigo-500/30 mb-4 z-20">
-            Сөз: {currentWordIndex + 1} / {gameWords.length}
+            {t('wordCount', { current: currentWordIndex + 1, total: gameWords.length })}
           </div>
           
           <div className="relative w-full max-w-2xl mx-auto h-64 md:h-80 flex items-center justify-center -mt-4">
@@ -582,26 +587,39 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
 
             {/* Current Top Card */}
             <div className={`absolute w-full h-full rounded-[2rem] border-2 shadow-2xl flex flex-col items-center justify-center p-6 z-10 transition-transform duration-300 ${mode === 'team' && turnState === 'answering' ? (answeringTeam === 'team1' ? 'bg-blue-900 border-blue-500 shadow-blue-500/20 scale-105' : 'bg-pink-900 border-pink-500 shadow-pink-500/20 scale-105') : 'bg-slate-800 border-indigo-500 shadow-indigo-500/10'}`}>
-              <p className="text-xl md:text-2xl text-slate-400 font-medium mb-2">Кыргызча котормосу:</p>
+              <p className="text-xl md:text-2xl text-slate-400 font-medium mb-2">{t('kgTranslation')}</p>
               <h2 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6 px-4">
                 {currentWordInfo.translation}
               </h2>
               
               <div className="h-10 mt-2">
                 {mode === 'team' && turnState === 'buzz' ? (
-                  <p className="text-lg md:text-xl text-yellow-400 animate-pulse font-bold">Ким биринчи баскычты басса, ошол жооп берет!</p>
+                  <p className="text-lg md:text-xl text-yellow-400 animate-pulse font-bold">{t('whoPressesFirst')}</p>
                 ) : currentWordInfo.is_manual_input ? (
-                  <p className="text-lg md:text-xl text-slate-300">Жообун текст менен жазыңыз</p>
+                  <p className="text-lg md:text-xl text-slate-300">{t('answerWithText')}</p>
                 ) : isListening ? (
                   <div className="flex items-center space-x-3 text-indigo-400">
                     <span className="relative flex h-4 w-4">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-4 w-4 bg-indigo-500"></span>
                     </span>
-                    <span className="text-lg md:text-xl font-semibold">{mode === 'team' ? (answeringTeam === 'team1' ? team1Name : team2Name) + " угулуп жатат..." : "Угуу режими иштеп жатат..."}</span>
+                    <span className="text-lg md:text-xl font-semibold">{mode === 'team' ? t('teamListening', { team: answeringTeam === 'team1' ? team1Name : team2Name }) : t('listeningMode')}</span>
                   </div>
                 ) : (
-                  <p className="text-lg md:text-xl text-slate-300">{getLangSpeakLabel(themeLangCode)}</p>
+                  <p className="text-lg md:text-xl text-slate-300">{
+                    themeLangCode === 'en' ? t('speakEn') :
+                    themeLangCode === 'ru' ? t('speakRu') :
+                    themeLangCode === 'tr' ? t('speakTr') :
+                    themeLangCode === 'zh' ? t('speakZh') :
+                    themeLangCode === 'ar' ? t('speakAr') :
+                    themeLangCode === 'es' ? t('speakEs') :
+                    themeLangCode === 'fr' ? t('speakFr') :
+                    themeLangCode === 'de' ? t('speakDe') :
+                    themeLangCode === 'ko' ? t('speakKo') :
+                    themeLangCode === 'ja' ? t('speakJa') :
+                    themeLangCode === 'ky' ? t('speakKy') :
+                    t('speakEn')
+                  }</p>
                 )}
               </div>
             </div>
@@ -613,7 +631,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
                  type="text"
                  value={manualInputText}
                  onChange={e => setManualInputText(e.target.value)}
-                 placeholder={`${mode === 'team' ? (answeringTeam === 'team1' ? team1Name : team2Name) + ', жазыңыз...' : 'Котормосун жазыңыз...'}`}
+                 placeholder={`${mode === 'team' ? t('writePlaceholderTeam', { team: answeringTeam === 'team1' ? team1Name : team2Name }) : t('writePlaceholderSolo')}`}
                  className="flex-1 px-4 py-3 bg-white/10 text-white placeholder-slate-400 border border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none backdrop-blur-md font-medium text-lg"
                  autoFocus
                />
@@ -621,7 +639,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
                  type="submit"
                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95 text-lg"
                >
-                 Текшерүү
+                 {t('checkBtn')}
                </button>
              </form>
           )}
@@ -643,7 +661,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
                 className="w-40 h-40 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 border-8 border-blue-900 shadow-[0_0_50px_rgba(59,130,246,0.5)] flex flex-col items-center justify-center active:scale-90 transition-all hover:scale-105"
               >
                 <div className="text-white font-black text-2xl md:text-3xl text-center leading-tight mb-2 drop-shadow-md px-2 break-all">{team1Name}</div>
-                <div className="text-blue-200 font-bold uppercase text-xs md:text-sm tracking-wider bg-blue-900/50 px-3 py-1 rounded-full">Жооп берүү</div>
+                <div className="text-blue-200 font-bold uppercase text-xs md:text-sm tracking-wider bg-blue-900/50 px-3 py-1 rounded-full">{t('answerBtn')}</div>
               </button>
               
               <button 
@@ -651,7 +669,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
                 className="w-40 h-40 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-pink-500 to-rose-700 hover:from-pink-400 hover:to-rose-600 border-8 border-pink-900 shadow-[0_0_50px_rgba(236,72,153,0.5)] flex flex-col items-center justify-center active:scale-90 transition-all hover:scale-105"
               >
                 <div className="text-white font-black text-2xl md:text-3xl text-center leading-tight mb-2 drop-shadow-md px-2 break-all">{team2Name}</div>
-                <div className="text-pink-200 font-bold uppercase text-xs md:text-sm tracking-wider bg-pink-900/50 px-3 py-1 rounded-full">Жооп берүү</div>
+                <div className="text-pink-200 font-bold uppercase text-xs md:text-sm tracking-wider bg-pink-900/50 px-3 py-1 rounded-full">{t('answerBtn')}</div>
               </button>
             </div>
           )}
@@ -660,7 +678,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
         {/* Actions for Solo or when Answering in Team */}
         {(mode === 'solo' || (mode === 'team' && turnState === 'answering')) && (
           <div className="flex justify-center items-center space-x-4 md:space-x-8 pb-8 z-20">
-            <button onClick={speakWord} title="Кантип айтылат? Угуу" className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-800 border-2 border-slate-700 hover:bg-slate-700 flex items-center justify-center transition-all shadow-lg hover:scale-105 text-indigo-400 hover:text-indigo-300">
+            <button onClick={speakWord} title={t('howToPronounce')} className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-800 border-2 border-slate-700 hover:bg-slate-700 flex items-center justify-center transition-all shadow-lg hover:scale-105 text-indigo-400 hover:text-indigo-300">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
@@ -669,7 +687,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
             {!currentWordInfo.is_manual_input && (
               <button 
                 onClick={toggleListening}
-                title={isAutoListen ? "Угууну токтотуу" : "Угууну баштоо"}
+                title={isAutoListen ? t('stopListeningTitle') : t('startListeningTitle')}
                 className={`w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center shadow-2xl transition-all ${
                   isListening || isAutoListen ? 'bg-red-500 animate-[pulse_1.5s_ease-in-out_infinite] scale-110 shadow-red-500/50' : (mode === 'team' ? (answeringTeam === 'team2' ? 'bg-pink-600 hover:bg-pink-500 shadow-pink-600/50' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/50') : 'bg-indigo-600 hover:bg-indigo-500 hover:scale-105 shadow-indigo-600/50')
                 }`}
@@ -677,11 +695,11 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
-                <span className="text-white/80 text-xs font-medium uppercase tracking-widest">{isAutoListen ? "Токтотуу" : "Айт"}</span>
+                <span className="text-white/80 text-xs font-medium uppercase tracking-widest">{isAutoListen ? t('stopBtn') : t('speakBtn')}</span>
               </button>
             )}
 
-            <button onClick={skipWord} title="Өткөрүп жиберүү" className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-800 border-2 border-slate-700 hover:bg-slate-700 flex items-center justify-center transition-all shadow-lg hover:scale-105 text-slate-400 hover:text-white">
+            <button onClick={skipWord} title={t('skipBtn')} className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-800 border-2 border-slate-700 hover:bg-slate-700 flex items-center justify-center transition-all shadow-lg hover:scale-105 text-slate-400 hover:text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
               </svg>
@@ -693,17 +711,17 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
   }
 
   // finished
-  let finalWinText = "Оюн Аяктады!";
+  let finalWinText = t('gameFinished');
   let finalWinColor = "text-yellow-400";
   if (mode === 'team') {
     if (team1Score > team2Score) {
-      finalWinText = `🎉 ЖЕҢҮҮЧҮ: ${team1Name}!`;
+      finalWinText = t('winner', { name: team1Name });
       finalWinColor = "text-blue-400";
     } else if (team2Score > team1Score) {
-      finalWinText = `🎉 ЖЕҢҮҮЧҮ: ${team2Name}!`;
+      finalWinText = t('winner', { name: team2Name });
       finalWinColor = "text-pink-400";
     } else {
-      finalWinText = "🤝 ТЕҢ ЧЫГУУ!";
+      finalWinText = t('draw');
       finalWinColor = "text-emerald-400";
     }
   }
@@ -716,20 +734,20 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
         {mode === 'solo' ? (
           <>
             <div className="space-y-4 my-8">
-              <p className="text-xl text-slate-300">Жалпы Упай</p>
+              <p className="text-xl text-slate-300">{t('totalScore')}</p>
               <p className="text-6xl font-black text-white">{score}</p>
             </div>
             <div className="flex justify-between bg-slate-700/50 p-6 rounded-2xl mb-8">
               <div>
-                <p className="text-slate-400 text-sm mb-1">Туура сөздөр</p>
+                <p className="text-slate-400 text-sm mb-1">{t('correctWords')}</p>
                 <p className="text-3xl font-bold text-green-400">{score / 10}</p>
               </div>
               <div>
-                <p className="text-slate-400 text-sm mb-1">Убакыт</p>
-                <p className="text-3xl font-bold text-blue-400">{selectedTimeSec - timeLeft} сек</p>
+                <p className="text-slate-400 text-sm mb-1">{t('time')}</p>
+                <p className="text-3xl font-bold text-blue-400">{t('sec', { sec: selectedTimeSec - timeLeft })}</p>
               </div>
               <div>
-                <p className="text-slate-400 text-sm mb-1">Каталар</p>
+                <p className="text-slate-400 text-sm mb-1">{t('mistakes', { count: '' }).replace(':', '').trim()}</p>
                 <p className="text-3xl font-bold text-red-400">{mistakes}</p>
               </div>
             </div>
@@ -739,25 +757,25 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
             <div className="bg-blue-900/40 p-6 rounded-2xl border border-blue-500/30">
               <h3 className="text-xl font-bold text-blue-300 mb-4 truncate">{team1Name}</h3>
               <p className="text-5xl font-black text-white mb-2">{team1Score}</p>
-              <p className="text-slate-400 text-sm">Каталар: <span className="text-red-400 font-bold">{team1Mistakes}</span></p>
+              <p className="text-slate-400 text-sm">{t('mistakes', { count: '' }).replace(':', '').trim()}: <span className="text-red-400 font-bold">{team1Mistakes}</span></p>
             </div>
             <div className="bg-pink-900/40 p-6 rounded-2xl border border-pink-500/30">
               <h3 className="text-xl font-bold text-pink-300 mb-4 truncate">{team2Name}</h3>
               <p className="text-5xl font-black text-white mb-2">{team2Score}</p>
-              <p className="text-slate-400 text-sm">Каталар: <span className="text-red-400 font-bold">{team2Mistakes}</span></p>
+              <p className="text-slate-400 text-sm">{t('mistakes', { count: '' }).replace(':', '').trim()}: <span className="text-red-400 font-bold">{team2Mistakes}</span></p>
             </div>
             <div className="col-span-2 mt-4 bg-slate-700/50 p-4 rounded-xl">
-               <p className="text-slate-400 text-sm">Жалпы кеткен убакыт: <span className="text-white font-bold">{selectedTimeSec - timeLeft} сек</span></p>
+               <p className="text-slate-400 text-sm">{t('totalTimeTaken')} <span className="text-white font-bold">{t('sec', { sec: selectedTimeSec - timeLeft })}</span></p>
             </div>
           </div>
         )}
 
         <div className="flex flex-col sm:flex-row gap-4">
           <button onClick={startGame} className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-black rounded-xl transition shadow-lg text-lg">
-            Кайра ойноо 🔄
+            {t('playAgainBtn')}
           </button>
           <button onClick={() => window.location.href = '/'} className="flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl transition text-lg">
-            Башкы бетке
+            {t('toHomeBtn')}
           </button>
         </div>
       </div>

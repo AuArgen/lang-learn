@@ -5,8 +5,10 @@ import { createThemeAction, deleteThemeAction, requestPublicationAction, updateT
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { Play, Plus, Edit, Trash2, Send, CheckCircle, Info, History } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function ThemesClient({ themes }: { themes: Theme[] }) {
+  const t = useTranslations('Themes');
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -17,7 +19,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
       <div className="w-full lg:w-1/3">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-6">
           <h3 className="text-xl font-bold mb-6 text-slate-800">
-            {editingTheme ? "Теманы өзгөртүү" : "Жаңы тема түзүү"}
+            {editingTheme ? t('editTheme') : t('createTheme')}
           </h3>
           
           <form 
@@ -35,35 +37,35 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
             className="space-y-5"
           >
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Теманын аталышы</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">{t('themeTitle')}</label>
               <input 
                 name="title" 
                 required 
                 defaultValue={editingTheme?.title || ''}
                 className="w-full px-4 py-3 text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 font-medium" 
-                placeholder="Мисалы: Үй жаныбарлары" 
+                placeholder={t('themeTitlePlaceholder')} 
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Кенен маалымат</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">{t('details')}</label>
               <textarea 
                 name="description" 
                 required 
                 defaultValue={editingTheme?.description || ''}
                 rows={4}
                 className="w-full px-4 py-3 text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all resize-none placeholder:text-slate-400" 
-                placeholder="Бул тема жөнүндө кыскача маалымат..." 
+                placeholder={t('detailsPlaceholder')} 
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Кайсыл тилде?</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">{t('languageLabel')}</label>
               <select
                 name="language"
                 required
                 defaultValue={editingTheme?.language || ''}
                 className="w-full px-4 py-3 text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-medium appearance-none"
               >
-                <option value="" disabled>Тилди тандаңыз</option>
+                <option value="" disabled>{t('languageSelect')}</option>
                 {POPULAR_LANGUAGES.map(lang => (
                   <option key={lang.code} value={lang.code}>
                     {lang.name}
@@ -78,9 +80,9 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                 className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm hover:shadow transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 {editingTheme ? (
-                  <>Сактоо</>
+                  <>{t('save')}</>
                 ) : (
-                  <><Plus className="w-5 h-5" /> Кошуу</>
+                  <><Plus className="w-5 h-5" /> {t('add')}</>
                 )}
               </button>
               
@@ -90,7 +92,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                   onClick={() => setEditingTheme(null)}
                   className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all"
                 >
-                  Жокко чыгаруу
+                  {t('cancel')}
                 </button>
               )}
             </div>
@@ -105,9 +107,9 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-200">
-                  <th className="px-5 py-4 text-sm font-bold text-slate-700">Аталышы / Маалымат</th>
-                  <th className="px-5 py-4 text-sm font-bold text-slate-700 whitespace-nowrap">Убактысы</th>
-                  <th className="px-5 py-4 text-sm font-bold text-slate-700 text-right">Аракеттер</th>
+                  <th className="px-5 py-4 text-sm font-bold text-slate-700">{t('tableTitle')}</th>
+                  <th className="px-5 py-4 text-sm font-bold text-slate-700 whitespace-nowrap">{t('tableTime')}</th>
+                  <th className="px-5 py-4 text-sm font-bold text-slate-700 text-right">{t('tableActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -126,12 +128,12 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                           </span>
                         )}
                         <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-semibold">
-                          {theme.words_count || 0} сөз
+                          {t('wordsCount', { count: theme.words_count || 0 })}
                         </span>
                         {/* Статусу төмөн жагында чыгат */}
-                        {theme.status === 'published' && <span className="inline-flex items-center px-2 py-1 rounded-md bg-green-100 text-green-700 text-xs font-semibold"><CheckCircle className="w-3 h-3 mr-1"/> Публикацияланды</span>}
-                        {theme.status === 'pending' && <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-700 text-xs font-semibold"><Info className="w-3 h-3 mr-1"/> Күтүүдө</span>}
-                        {theme.status === 'draft' && <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-semibold">Каралоо</span>}
+                        {theme.status === 'published' && <span className="inline-flex items-center px-2 py-1 rounded-md bg-green-100 text-green-700 text-xs font-semibold"><CheckCircle className="w-3 h-3 mr-1"/> {t('statusPublished')}</span>}
+                        {theme.status === 'pending' && <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-700 text-xs font-semibold"><Info className="w-3 h-3 mr-1"/> {t('statusPending')}</span>}
+                        {theme.status === 'draft' && <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-semibold">{t('statusDraft')}</span>}
                       </div>
                     </td>
                     <td className="px-5 py-4 text-sm tracking-tight text-slate-500 whitespace-nowrap align-top pt-5">
@@ -143,7 +145,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                           <button 
                             onClick={() => setEditingTheme(theme)}
                             className={`p-2 rounded-lg transition font-medium flex items-center justify-center ${isSelected ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
-                            title="Оңдоо"
+                            title={t('actionEdit')}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -151,10 +153,10 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                           <form 
                             action={async () => {
                               if (theme.words_count > 0) {
-                                alert("Бул теманын ичинде сөздөр бар. Ошондуктан өчүрүлбөйт.");
+                                alert(t('deleteError'));
                                 return;
                               }
-                              if (confirm("Сиз чын эле бул теманы өчүрүүнү каалайсызбы?")) {
+                              if (confirm(t('deleteConfirm'))) {
                                 await deleteThemeAction(theme.id!);
                                 if (editingTheme?.id === theme.id) setEditingTheme(null);
                               }
@@ -163,7 +165,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                             <button 
                               type="submit" 
                               className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition flex items-center justify-center gap-2"
-                              title="Өчүрүү"
+                              title={t('actionDelete')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -172,7 +174,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                           <Link 
                             href={`/themes/${theme.id}`} 
                             className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
-                            title="Сөз кошуу"
+                            title={t('actionAddWord')}
                           >
                             <Plus className="w-4 h-4" />
                           </Link>
@@ -180,7 +182,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                           <Link 
                             href={`/themes/${theme.id}/history`} 
                             className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title="История"
+                            title={t('actionHistory')}
                           >
                             <History className="w-4 h-4" />
                           </Link>
@@ -188,7 +190,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                           <Link 
                             href={`/play/${theme.id}`} 
                             className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition"
-                            title="Оюнду баштоо"
+                            title={t('actionPlay')}
                           >
                             <Play className="w-4 h-4" />
                           </Link>
@@ -199,7 +201,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                           <form 
                             action={async () => {
                               if ((theme.words_count || 0) < 10) {
-                                alert("Публикация кылуу үчүн кеминде 10 сөз болуусу керек!");
+                                alert(t('publishError'));
                                 return;
                               }
                               await requestPublicationAction(theme.id!);
@@ -210,7 +212,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                               type="submit"
                               className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 shadow-sm text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all"
                             >
-                              <Send className="w-3.5 h-3.5 mr-1.5" /> Публикациялоо
+                              <Send className="w-3.5 h-3.5 mr-1.5" /> {t('publish')}
                             </button>
                           </form>
                         )}
@@ -218,7 +220,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                         {(theme.status === 'published' || theme.status === 'pending') && (
                           <form 
                             action={async () => {
-                                if (confirm("Чын эле публикациядан алабызбы? Тема кайрадан каралоо (draft) статусуна өтөт.")) {
+                                if (confirm(t('unpublishConfirm'))) {
                                   await unpublishThemeAction(theme.id!);
                                 }
                             }} 
@@ -228,7 +230,7 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                               type="submit"
                               className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-white border border-red-200 shadow-sm text-red-600 hover:text-red-700 hover:border-red-300 hover:bg-red-50 focus:ring-2 focus:ring-red-200 rounded-lg transition-all"
                             >
-                              <Info className="w-3.5 h-3.5 mr-1.5" /> Публикациядан алуу
+                              <Info className="w-3.5 h-3.5 mr-1.5" /> {t('unpublish')}
                             </button>
                           </form>
                         )}
@@ -243,8 +245,8 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
                           <Plus className="w-8 h-8 text-slate-300" />
                         </div>
-                        <p className="text-base font-medium text-slate-600">Бир дагы тема жок</p>
-                        <p className="text-sm mt-1">Оң жактагы формадан жаңы тема кошуңуз.</p>
+                        <p className="text-base font-medium text-slate-600">{t('noThemes')}</p>
+                        <p className="text-sm mt-1">{t('noThemesDesc')}</p>
                       </div>
                     </td>
                   </tr>

@@ -7,12 +7,14 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import WordsClient from './WordsClient';
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ThemeDetailsPage({ params }: { params: { id: string } }) {
+  const t = await getTranslations('Themes');
   const user = await getServerUser();
-  if (!user) return <div>Сураныч, системге кириңиз.</div>;
+  if (!user) return <div>{t('loginRequired')}</div>;
 
   const userRole = user.role?.toUpperCase() || 'USER';
   const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRATOR';

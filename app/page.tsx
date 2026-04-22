@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { getServerUser } from '@/lib/auth/server-auth';
 import { headers } from 'next/headers';
+import { getTranslations, getLocale } from 'next-intl/server';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 // This page queries the database on every request, so opt out of static generation.
 // The SQLite database is not available at Docker build time — only at runtime via volume mount.
@@ -23,6 +25,8 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
+  const t = await getTranslations('HomePage');
+  const locale = await getLocale();
   const themes = await themesService.getPublishedThemes();
   const user = await getServerUser();
 
@@ -43,20 +47,23 @@ export default async function HomePage() {
           <div className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             BilimAi
           </div>
-          <nav>
+          <nav className="flex items-center gap-4">
+            <LanguageSwitcher currentLocale={locale} />
             {user ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 border-l pl-4 ml-2">
                 <Link href="/themes" className="text-sm font-medium text-slate-700 hover:text-indigo-600">
-                  Кабинетке Кирүү
+                  {t('cabinet')}
                 </Link>
                 <a href="/api/auth/logout" className="text-sm font-medium text-red-500 hover:text-red-600">
-                  Чыгуу
+                  {t('logout')}
                 </a>
               </div>
             ) : (
-              <a href={authUrl} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium transition shadow-md shadow-indigo-200">
-                Кирүү (Login)
-              </a>
+              <div className="border-l pl-4 ml-2">
+                <a href={authUrl} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium transition shadow-md shadow-indigo-200">
+                  {t('login')}
+                </a>
+              </div>
             )}
           </nav>
         </div>
@@ -65,25 +72,25 @@ export default async function HomePage() {
       <main className="flex-1 max-w-6xl mx-auto px-4 py-12 w-full">
         <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
           <h1 className="text-5xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight mb-4">
-            Тил үйрөнүү эми <br className="hidden md:block"/>
+            {t('heroTitle1')} <br className="hidden md:block"/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
-              оюн менен укмуштуудай!
+              {t('heroTitle2')}
             </span>
           </h1>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto mb-6">
-            Сиздин үнүңүздү түшүнгөн жасалма интеллект. Тема тандаңыз, микрофонду басыңыз жана сөздөрдү туура айтуу менен упай топтоңуз.
+            {t('heroDesc')}
           </p>
           <div className="inline-flex items-center gap-3 bg-indigo-50 border border-indigo-100 px-6 py-4 rounded-2xl text-left max-w-3xl">
             <span className="text-3xl">💡</span>
             <p className="text-sm md:text-base text-indigo-900 font-medium leading-relaxed">
-              <strong>BilimAi Learn Lang</strong> — бул <a href="https://bilimai.kg" className="text-indigo-600 underline hover:text-indigo-700">BilimAi</a> экосистемасынын тил үйрөнүүгө арналган кошумча сервиси. Бул долбоор окуучулардын сөздүк запасын кеңейтип, туура сүйлөө (айтылыш) көндүмдөрүн оюн аркылуу өнүктүрүүнү көздөйт.
+              <strong>BilimAi Learn Lang</strong> — {t('aboutProject')}
             </p>
           </div>
         </div>
 
         <div>
           <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-            🔥 Жалпыга ачык оюндар
+            🔥 {t('publicGames')}
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in duration-1000 delay-200 fill-mode-both">
             {themes.map((theme: any) => (
@@ -94,14 +101,14 @@ export default async function HomePage() {
                 <h3 className="text-xl font-bold text-slate-800 mb-2">{theme.title}</h3>
                 <p className="text-slate-500 text-sm mb-4 line-clamp-2">{theme.description}</p>
                 <div className="mt-auto flex items-center justify-between text-sm font-medium">
-                  <span className="text-slate-400">{theme.words_count || 0} сөз</span>
-                  <span className="text-indigo-600 group-hover:text-indigo-700">Ойноо &rarr;</span>
+                  <span className="text-slate-400">{t('wordsCount', { count: theme.words_count || 0 })}</span>
+                  <span className="text-indigo-600 group-hover:text-indigo-700">{t('play')}</span>
                 </div>
               </Link>
             ))}
             {themes.length === 0 && (
               <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-100">
-                <p className="text-lg text-slate-500">Азырынча жалпыга ачык оюндар жок.</p>
+                <p className="text-lg text-slate-500">{t('noGames')}</p>
               </div>
             )}
           </div>
@@ -109,7 +116,7 @@ export default async function HomePage() {
 
         <div className="mt-20">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-            🔗 Сервистер
+            🔗 {t('services')}
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 animate-in fade-in duration-1000 delay-300 fill-mode-both">
             <a href="https://bilimai.kg" target="_blank" rel="noopener noreferrer" className="group flex flex-col bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -120,7 +127,7 @@ export default async function HomePage() {
               <p className="text-slate-500 text-sm mb-4">Билим берүү жана жасалма интеллект боюнча башкы платформабызга өтүңүз.</p>
               <div className="mt-auto flex items-center justify-between text-sm font-medium">
                 <span className="text-slate-400">bilimai.kg</span>
-                <span className="text-blue-600 group-hover:text-blue-700">Ачып көрүү &rarr;</span>
+                <span className="text-blue-600 group-hover:text-blue-700">{t('explore')}</span>
               </div>
             </a>
             
@@ -132,7 +139,7 @@ export default async function HomePage() {
               <p className="text-slate-500 text-sm mb-4">Кеңейтилген мүмкүнчүлүктөр жана кошумча куралдар камтылган премиум кызматтар.</p>
               <div className="mt-auto flex items-center justify-between text-sm font-medium">
                 <span className="text-slate-400">plus.bilimai.kg</span>
-                <span className="text-purple-600 group-hover:text-purple-700">Ачып көрүү &rarr;</span>
+                <span className="text-purple-600 group-hover:text-purple-700">{t('explore')}</span>
               </div>
             </a>
           </div>
@@ -140,7 +147,7 @@ export default async function HomePage() {
       </main>
       
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-sm">
-        &copy; {new Date().getFullYear()} BilimAi. Бардык укуктар корголгон.
+        &copy; {new Date().getFullYear()} BilimAi. {t('rights')}
       </footer>
     </div>
   );

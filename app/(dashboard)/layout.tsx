@@ -1,8 +1,12 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { getServerUser } from '@/lib/auth/server-auth';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { getTranslations, getLocale } from 'next-intl/server';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const t = await getTranslations('DashboardNav');
+  const locale = await getLocale();
   const user = await getServerUser();
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN' || user?.role?.toUpperCase() === 'ADMINISTRATOR';
 
@@ -13,21 +17,25 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           BilimAi Games
         </h1>
         
+        <div className="mb-4">
+          <LanguageSwitcher currentLocale={locale} />
+        </div>
+
         <Link href="/themes" className="text-slate-700 font-medium hover:text-indigo-600 hover:bg-slate-100 p-3 rounded-xl transition duration-200">
-          Менин темаларым
+          {t('themes')}
         </Link>
         <Link href="/" className="text-slate-700 font-medium hover:text-indigo-600 hover:bg-slate-100 p-3 rounded-xl transition duration-200">
-          Бардык оюндар (Home)
+          {t('home')}
         </Link>
         
         {isAdmin && (
           <Link href="/admin" className="text-indigo-700 font-bold bg-indigo-50 hover:bg-indigo-100 p-3 rounded-xl transition duration-200 mt-2">
-            Админ Панель
+            {t('admin')}
           </Link>
         )}
 
         <div className="mt-auto pt-6 border-t border-slate-100 space-y-1">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Профиль</p>
+          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{t('profile')}</p>
           {user ? (
             <>
               <div className="flex items-center justify-between mt-2">
@@ -49,7 +57,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               </div>
             </>
           ) : (
-            <p className="text-sm text-slate-500">Авторизациядан өткөн жок</p>
+            <p className="text-sm text-slate-500">{t('notAuthorized')}</p>
           )}
         </div>
       </nav>
