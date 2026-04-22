@@ -15,7 +15,7 @@ export async function addWordAction(themeId: string, formData: FormData) {
   if (user.role === 'USER') {
     const limitReached = await hasReachedWordLimit(themeId);
     if (limitReached) {
-      throw new Error("Сиздин лимит бүттү. Бул темада эң көп 3 сөз боло алат.");
+      throw new Error("Сиздин лимит бүттү. Бул темада эң көп 5 сөз боло алат.");
     }
   }
 

@@ -58,6 +58,7 @@
     "actionPlay": "Start game",
     "publishError": "There must be at least 10 words to publish!",
     "publish": "Publish",
+    "publishRequestBtn": "Request publication",
     "unpublishConfirm": "Are you sure you want to unpublish? The theme will return to draft status.",
     "unpublish": "Unpublish",
     "noThemes": "No themes",

@@ -154,11 +154,18 @@ export default function WordsClient({
              {userRole !== 'USER' && theme.words_count >= 10 && theme.status === 'draft' && (
                 <form action={requestPublicationAction.bind(null, theme.id)}>
                   <button className="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-sm font-semibold text-sm transition active:scale-95">
-                    {t('publishRequestBtn')}
+                    {(userRole === 'ADMIN' || userRole === 'ADMINISTRATOR') ? tThemes('publish') : t('publishRequestBtn')}
                   </button>
                 </form>
              )}
-             {theme.words_count >= 10 && (
+             {(userRole === 'ADMIN' || userRole === 'ADMINISTRATOR') && theme.status === 'pending' && (
+                <form action={requestPublicationAction.bind(null, theme.id)}>
+                  <button className="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-sm font-semibold text-sm transition active:scale-95 mt-2">
+                    {tThemes('publish')}
+                  </button>
+                </form>
+             )}
+             {theme.words_count >= 3 && (
                <div className="mt-4 pt-4 border-t border-indigo-200/60">
                   <p className="text-xs text-indigo-600 font-semibold mb-2">{t('publicLink')}</p>
                   <input readOnly value={`${appUrl}/play/${theme.id}`} className="w-full bg-white/60 text-indigo-900 px-4 py-2 font-medium text-sm rounded-xl border border-indigo-200 focus:outline-none" />

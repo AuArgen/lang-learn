@@ -7,7 +7,12 @@ import Link from 'next/link';
 import { Play, Plus, Edit, Trash2, Send, CheckCircle, Info, History } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-export default function ThemesClient({ themes }: { themes: Theme[] }) {
+type ThemesClientProps = {
+  themes: Theme[];
+  isAdmin?: boolean;
+};
+
+export default function ThemesClient({ themes, isAdmin = false }: ThemesClientProps) {
   const t = useTranslations('Themes');
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -212,12 +217,28 @@ export default function ThemesClient({ themes }: { themes: Theme[] }) {
                               type="submit"
                               className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 shadow-sm text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all"
                             >
+                              <Send className="w-3.5 h-3.5 mr-1.5" /> {isAdmin ? t('publish') : t('publishRequestBtn')}
+                            </button>
+                          </form>
+                        )}
+                        
+                        {theme.status === 'pending' && isAdmin && (
+                          <form 
+                            action={async () => {
+                              await requestPublicationAction(theme.id!); // for admin this sets to published
+                            }} 
+                            className="mt-1"
+                          >
+                            <button 
+                              type="submit"
+                              className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-white border border-green-200 shadow-sm text-green-600 hover:text-green-700 hover:border-green-300 hover:bg-green-50 focus:ring-2 focus:ring-green-100 rounded-lg transition-all"
+                            >
                               <Send className="w-3.5 h-3.5 mr-1.5" /> {t('publish')}
                             </button>
                           </form>
                         )}
 
-                        {(theme.status === 'published' || theme.status === 'pending') && (
+                        {(theme.status === 'published' || (theme.status === 'pending' && isAdmin)) && (
                           <form 
                             action={async () => {
                                 if (confirm(t('unpublishConfirm'))) {

@@ -55,8 +55,12 @@ export async function requestPublicationAction(id: string) {
   const user = await getServerUser();
   if (!user || user.role === 'USER') throw new Error("Unauthorized");
   
-  // Directly publishing for now so it appears on the homepage without an admin approval panel
-  await themesService.updateTheme(id, { status: 'published' });
+  const userRole = user.role?.toUpperCase() || 'USER';
+  const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRATOR';
+
+  const newStatus = isAdmin ? 'published' : 'pending';
+  
+  await themesService.updateTheme(id, { status: newStatus });
   revalidatePath('/themes');
   revalidatePath('/');
 }

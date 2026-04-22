@@ -25,5 +25,5 @@ export async function hasReachedWordLimit(themeId: string) {
   const count = await prisma.word.count({
     where: { theme_id: themeId }
   });
-  return count >= 3; // Limit is 3
+  return count >= 5; // Limit is 5
 }
