@@ -455,7 +455,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
         <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
           {/* Back button */}
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/')}
             className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-6 font-medium"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
