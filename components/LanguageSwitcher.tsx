@@ -30,7 +30,8 @@ export default function LanguageSwitcher({ currentLocale }: { currentLocale: str
               : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          {t(locale)}
+          <span className="sm:hidden">{locale.toUpperCase()}</span>
+          <span className="hidden sm:inline">{t(locale)}</span>
         </button>
       ))}
     </div>

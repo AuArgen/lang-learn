@@ -86,6 +86,18 @@ export default async function HomePage() {
               <strong>BilimAi Learn Lang</strong> — {t('aboutProject')}
             </p>
           </div>
+
+          <div className="mt-10 mb-4 flex justify-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-75">
+            {user ? (
+              <Link href="/themes" className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold text-lg transition shadow-xl shadow-indigo-200 hover:-translate-y-1 flex items-center gap-2">
+                <span className="text-xl">👤</span> {t('cabinet')}
+              </Link>
+            ) : (
+              <a href={authUrl} className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold text-lg transition shadow-xl shadow-indigo-200 hover:-translate-y-1 flex items-center gap-2">
+                <span className="text-xl">🔐</span> {t('login')}
+              </a>
+            )}
+          </div>
           
           <div className="mt-8 flex flex-col sm:flex-row gap-6 justify-center animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 mx-auto max-w-3xl">
             <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm text-left flex-1">
