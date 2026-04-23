@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { getServerUser } from '@/lib/auth/server-auth';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { getTranslations, getLocale } from 'next-intl/server';
+import MobileBottomNav from '@/components/MobileBottomNav';
+import { headers } from 'next/headers';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const t = await getTranslations('DashboardNav');
@@ -10,16 +12,27 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const user = await getServerUser();
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN' || user?.role?.toUpperCase() === 'ADMINISTRATOR';
 
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+  const appUrl = process.env.APP_URL || `${protocol}://${host}`;
+  let authUrl = process.env.AUTH_SERVICE_URL || '/api/auth/callback?token=mock_token';
+  if (authUrl.includes('localhost:3000')) {
+    authUrl = authUrl.replace('http://localhost:3000', appUrl);
+  }
+
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50">
-      <nav className="w-full md:w-64 bg-white md:border-r border-b md:border-b-0 p-5 flex flex-col gap-2">
-        <h1 className="text-2xl font-extrabold bg-gradient-to-br from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6">
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 pb-16 md:pb-0">
+      <nav className="w-full md:w-64 bg-white md:border-r border-b md:border-b-0 p-4 md:p-5 flex flex-row md:flex-col justify-between md:justify-start items-center md:items-stretch gap-2">
+        <h1 className="text-xl md:text-2xl font-extrabold bg-gradient-to-br from-indigo-600 to-purple-600 bg-clip-text text-transparent md:mb-6">
           BilimAi Games
         </h1>
         
-        <div className="mb-4">
+        <div className="md:mb-4">
           <LanguageSwitcher currentLocale={locale} />
         </div>
+
+        <div className="hidden md:flex flex-col gap-2 flex-1">
 
         <Link href="/themes" className="text-slate-700 font-medium hover:text-indigo-600 hover:bg-slate-100 p-3 rounded-xl transition duration-200">
           {t('themes')}
@@ -60,6 +73,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             <p className="text-sm text-slate-500">{t('notAuthorized')}</p>
           )}
         </div>
+        </div>
       </nav>
       
       <main className="flex-1 overflow-auto p-4 md:p-10">
@@ -67,6 +81,17 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           {children}
         </div>
       </main>
+
+      <MobileBottomNav 
+        user={user} 
+        isAdmin={isAdmin}
+        authUrl={authUrl}
+        tHome={locale === 'ru' ? 'Главная' : locale === 'en' ? 'Home' : 'Башкы'}
+        tCabinet={t('themes')}
+        tAdmin={t('admin')}
+        tLogin={locale === 'ru' ? 'Войти' : locale === 'en' ? 'Login' : 'Кирүү'}
+        tLogout={locale === 'ru' ? 'Выйти' : locale === 'en' ? 'Logout' : 'Чыгуу'}
+      />
     </div>
   )
 }

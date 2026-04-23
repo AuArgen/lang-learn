@@ -1,5 +1,6 @@
 import { themesService } from '@/lib/firebase/services/themes';
 import Link from 'next/link';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { Metadata } from 'next';
 import { getServerUser } from '@/lib/auth/server-auth';
 import { headers } from 'next/headers';
@@ -41,7 +42,7 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-16 md:pb-0">
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -50,7 +51,7 @@ export default async function HomePage() {
           <nav className="flex items-center gap-4">
             <LanguageSwitcher currentLocale={locale} />
             {user ? (
-              <div className="flex items-center gap-4 border-l pl-4 ml-2">
+              <div className="hidden md:flex items-center gap-4 border-l pl-4 ml-2">
                 <Link href="/themes" className="text-sm font-medium text-slate-700 hover:text-indigo-600">
                   {t('cabinet')}
                 </Link>
@@ -59,7 +60,7 @@ export default async function HomePage() {
                 </a>
               </div>
             ) : (
-              <div className="border-l pl-4 ml-2">
+              <div className="hidden md:block border-l pl-4 ml-2">
                 <a href={authUrl} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium transition shadow-md shadow-indigo-200">
                   {t('login')}
                 </a>
@@ -186,6 +187,17 @@ export default async function HomePage() {
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-sm">
         &copy; {new Date().getFullYear()} BilimAi. {t('rights')}
       </footer>
+
+      <MobileBottomNav 
+        user={user} 
+        isAdmin={user?.role?.toUpperCase() === 'ADMIN' || user?.role?.toUpperCase() === 'ADMINISTRATOR'}
+        authUrl={authUrl}
+        tHome={locale === 'ru' ? 'Главная' : locale === 'en' ? 'Home' : 'Башкы'}
+        tCabinet={t('cabinet')}
+        tAdmin={locale === 'ru' ? 'Админ' : locale === 'en' ? 'Admin' : 'Админ'}
+        tLogin={t('login')}
+        tLogout={t('logout')}
+      />
     </div>
   );
 }
