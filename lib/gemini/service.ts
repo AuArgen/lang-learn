@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI } from "@google/genai";
 
 export interface GeneratedWord {
   word: string;
@@ -6,9 +6,17 @@ export interface GeneratedWord {
 }
 
 const LANG_NAMES: Record<string, string> = {
-  en: 'English', ru: 'Russian', tr: 'Turkish',
-  zh: 'Chinese', ar: 'Arabic', es: 'Spanish',
-  fr: 'French', de: 'German', ko: 'Korean', ja: 'Japanese', ky: 'Kyrgyz',
+  en: "English",
+  ru: "Russian",
+  tr: "Turkish",
+  zh: "Chinese",
+  ar: "Arabic",
+  es: "Spanish",
+  fr: "French",
+  de: "German",
+  ko: "Korean",
+  ja: "Japanese",
+  ky: "Kyrgyz",
 };
 
 export async function generateWordsForTheme(
@@ -16,15 +24,16 @@ export async function generateWordsForTheme(
   themeTitle: string,
   themeLanguage: string,
   existingWords: string[] = [],
-  customDescription = ''
+  customDescription = "",
 ): Promise<GeneratedWord[]> {
-  const langName = LANG_NAMES[themeLanguage] || 'English';
-  const skipLine = existingWords.length > 0
-    ? `\nAlready added words (do NOT repeat these): ${existingWords.slice(0, 30).join(', ')}`
-    : '';
+  const langName = LANG_NAMES[themeLanguage] || "English";
+  const skipLine =
+    existingWords.length > 0
+      ? `\nAlready added words (do NOT repeat these): ${existingWords.slice(0, 30).join(", ")}`
+      : "";
   const customDescriptionLine = customDescription.trim()
     ? `\nTeacher's additional description/request: ${customDescription.trim()}`
-    : '';
+    : "";
 
   const prompt = `You are a professional vocabulary teacher creating word lists for language learners.
 
@@ -57,47 +66,57 @@ Now generate 10 words for topic "${themeTitle}":`;
   try {
     ai = new GoogleGenAI({ apiKey });
   } catch {
-    throw new Error('Жараксыз API ключ форматы. Ключди кайра текшериңиз.');
+    throw new Error("Жараксыз API ключ форматы. Ключди кайра текшериңиз.");
   }
 
   let responseText: string;
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview-05-20',
+      model: "gemini-2.5-flash-preview",
       contents: prompt,
     });
-    responseText = response.text || '';
+    responseText = response.text || "";
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : '';
-    if (msg.includes('API_KEY_INVALID') || msg.includes('API key not valid')) {
-      throw new Error('Gemini API ключ жараксыз. https://aistudio.google.com/api-keys сайтынан жаңы ключ алыңыз.');
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("API_KEY_INVALID") || msg.includes("API key not valid")) {
+      throw new Error(
+        "Gemini API ключ жараксыз. https://aistudio.google.com/api-keys сайтынан жаңы ключ алыңыз.",
+      );
     }
-    if (msg.includes('QUOTA_EXCEEDED') || msg.includes('quota')) {
-      throw new Error('API лимити бүттү. Бир аздан кийин кайра аракет кылыңыз.');
+    if (msg.includes("QUOTA_EXCEEDED") || msg.includes("quota")) {
+      throw new Error(
+        "API лимити бүттү. Бир аздан кийин кайра аракет кылыңыз.",
+      );
     }
-    if (msg.includes('PERMISSION_DENIED')) {
-      throw new Error('API ключке уруксат жок. Ключди кайра текшериңиз.');
+    if (msg.includes("PERMISSION_DENIED")) {
+      throw new Error("API ключке уруксат жок. Ключди кайра текшериңиз.");
     }
-    throw new Error(`AI катасы: ${msg || 'Белгисиз ката. Кайра аракет кылыңыз.'}`);
+    throw new Error(
+      `AI катасы: ${msg || "Белгисиз ката. Кайра аракет кылыңыз."}`,
+    );
   }
 
   const jsonMatch = responseText.match(/\[[\s\S]*?\]/);
   if (!jsonMatch) {
-    throw new Error('AI жооп форматы туура эмес. Кайра аракет кылыңыз.');
+    throw new Error("AI жооп форматы туура эмес. Кайра аракет кылыңыз.");
   }
 
   let words: GeneratedWord[];
   try {
     words = JSON.parse(jsonMatch[0]);
   } catch {
-    throw new Error('AI жоопту иштеп чыгуу мүмкүн болбоду. Кайра аракет кылыңыз.');
+    throw new Error(
+      "AI жоопту иштеп чыгуу мүмкүн болбоду. Кайра аракет кылыңыз.",
+    );
   }
 
   if (!Array.isArray(words) || words.length === 0) {
-    throw new Error('AI сөз генерациялай алган жок. Тема аталышын өзгөртүп аракет кылыңыз.');
+    throw new Error(
+      "AI сөз генерациялай алган жок. Тема аталышын өзгөртүп аракет кылыңыз.",
+    );
   }
 
   return words
-    .filter(w => w.word?.trim() && w.translation?.trim())
+    .filter((w) => w.word?.trim() && w.translation?.trim())
     .slice(0, 10);
 }
