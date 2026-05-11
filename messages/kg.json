@@ -128,7 +128,22 @@
     "allWords": "Бардык сөздөр ({count})",
     "textBadge": "Текст",
     "deleteWordConfirm": "Чын эле бул сөздү өчүрөсүзбү?",
-    "emptyDictionary": "Сөздүк бош. Сол жактан сөз кошуңуз."
+    "emptyDictionary": "Сөздүк бош. Сол жактан сөз кошуңуз.",
+    "wordPlaceholder": "Сөздү жазыңыз",
+    "aiTitle": "AI менен сөз генерациялоо",
+    "aiSubtitle": "Gemini AI автоматтык 10 сөз сунуштайт",
+    "aiAddError": "Сөздөрдү кошуу мүмкүн болгон жок.",
+    "aiAddedCount": "{count} сөз кошулду",
+    "aiSkippedCount": "{count} сөз кайталанган (өткөрүлдү)",
+    "aiDescriptionLine1": "\"{title}\" темасы боюнча AI 10 сөз сунуштайт.",
+    "aiDescriptionLine2": "Сизге жаккандарын тандап базага кошо аласыз.",
+    "aiLoading": "Генерацияланып жатат...",
+    "aiGenerateBtn": "10 сөз генерациялоо",
+    "aiSelectLabel": "Кошуучу сөздөрдү тандаңыз:",
+    "aiSelectAll": "Баарын тандоо",
+    "aiDeselectAll": "Баарын алып салуу",
+    "aiAddSelected": "+ {count} сөз кошуу",
+    "aiRegenerate": "Башка 10 сөз генерациялоо"
   },
   "PlayGame": {
     "speakEn": "Англисче айтыңыз!",

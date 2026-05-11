@@ -128,7 +128,22 @@
     "allWords": "Все слова ({count})",
     "textBadge": "Текст",
     "deleteWordConfirm": "Вы уверены, что хотите удалить это слово?",
-    "emptyDictionary": "Словарь пуст. Добавьте слово слева."
+    "emptyDictionary": "Словарь пуст. Добавьте слово слева.",
+    "wordPlaceholder": "Введите слово",
+    "aiTitle": "Генерация слов с AI",
+    "aiSubtitle": "Gemini AI автоматически предложит 10 слов",
+    "aiAddError": "Не удалось добавить слова.",
+    "aiAddedCount": "{count} слов добавлено",
+    "aiSkippedCount": "{count} слов пропущено (дубликаты)",
+    "aiDescriptionLine1": "AI предложит 10 слов по теме \"{title}\".",
+    "aiDescriptionLine2": "Выберите понравившиеся и добавьте в базу.",
+    "aiLoading": "Генерируется...",
+    "aiGenerateBtn": "Сгенерировать 10 слов",
+    "aiSelectLabel": "Выберите слова для добавления:",
+    "aiSelectAll": "Выбрать все",
+    "aiDeselectAll": "Снять все",
+    "aiAddSelected": "+ Добавить {count} слов",
+    "aiRegenerate": "Сгенерировать другие 10 слов"
   },
   "PlayGame": {
     "speakEn": "Скажите по-английски!",

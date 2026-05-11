@@ -46,7 +46,7 @@ export default function WordsClient({
   const themeLanguageName = POPULAR_LANGUAGES.find(l => l.code === theme.language)?.name;
   const wordLabelText = themeLanguageName ? t('wordLabelWithLang', { lang: themeLanguageName }) : t('wordLabelFallback');
 
-  let wordPlaceholder = 'Сөздү жазыңыз';
+  let wordPlaceholder = t('wordPlaceholder');
   if (theme.language === 'en') wordPlaceholder = 'Apple';
   if (theme.language === 'ru') wordPlaceholder = 'Яблоко';
   if (theme.language === 'tr') wordPlaceholder = 'Elma';
@@ -78,7 +78,7 @@ export default function WordsClient({
       setAiWords(result);
       setSelectedWords(new Set(result.map((_, i) => i)));
     } catch (e: any) {
-      setAiError(e.message || 'Ката кетти. Кайра аракет кылыңыз.');
+      setAiError(e.message || t('errorOccurred'));
     } finally {
       setAiLoading(false);
     }
@@ -103,7 +103,7 @@ export default function WordsClient({
       setAiWords([]);
       setSelectedWords(new Set());
     } catch (e: any) {
-      setAiError(e.message || 'Сөздөрдү кошуу мүмкүн болгон жок.');
+      setAiError(e.message || t('aiAddError'));
     } finally {
       setAddingWords(false);
     }
@@ -209,8 +209,8 @@ export default function WordsClient({
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">✨</div>
                 <div>
-                  <p className="font-bold text-slate-800 text-sm">AI менен сөз генерациялоо</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Gemini AI автоматтык 10 сөз сунуштайт</p>
+                  <p className="font-bold text-slate-800 text-sm">{t('aiTitle')}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{t('aiSubtitle')}</p>
                 </div>
               </div>
               <span className="text-slate-400 text-lg">{aiOpen ? '▲' : '▼'}</span>
@@ -228,8 +228,8 @@ export default function WordsClient({
                   <div className="p-3 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm font-medium flex items-start gap-2">
                     <span>✅</span>
                     <span>
-                      {addResult.added} сөз кошулду
-                      {addResult.skipped > 0 ? `, ${addResult.skipped} сөз кайталанган (өткөрүлдү)` : ''}
+                      {t('aiAddedCount', { count: addResult.added })}
+                      {addResult.skipped > 0 ? `, ${t('aiSkippedCount', { count: addResult.skipped })}` : ''}
                     </span>
                   </div>
                 )}
@@ -237,8 +237,8 @@ export default function WordsClient({
                 {aiWords.length === 0 ? (
                   <div>
                     <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-                      <strong>"{theme.title}"</strong> темасы боюнча AI 10 сөз сунуштайт.
-                      Сизге жаккандарын тандап базага кошо аласыз.
+                      {t('aiDescriptionLine1', { title: theme.title })}
+                      {' '}{t('aiDescriptionLine2')}
                     </p>
                     <button
                       onClick={handleGenerateAI}
@@ -246,26 +246,26 @@ export default function WordsClient({
                       className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
                     >
                       {aiLoading ? (
-                        <><span className="animate-spin inline-block">⏳</span> Генерацияланып жатат...</>
+                        <><span className="animate-spin inline-block">⏳</span> {t('aiLoading')}</>
                       ) : (
-                        <><span>✨</span> 10 сөз генерациялоо</>
+                        <><span>✨</span> {t('aiGenerateBtn')}</>
                       )}
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold text-slate-700">Кошуучу сөздөрдү тандаңыз:</p>
+                      <p className="text-sm font-bold text-slate-700">{t('aiSelectLabel')}</p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setSelectedWords(new Set(aiWords.map((_, i) => i)))}
                           className="text-xs text-indigo-600 hover:underline"
-                        >Баарын тандоо</button>
+                        >{t('aiSelectAll')}</button>
                         <span className="text-slate-300">|</span>
                         <button
                           onClick={() => setSelectedWords(new Set())}
                           className="text-xs text-slate-500 hover:underline"
-                        >Баарын алып салуу</button>
+                        >{t('aiDeselectAll')}</button>
                       </div>
                     </div>
 
@@ -295,13 +295,13 @@ export default function WordsClient({
                         disabled={addingWords || selectedWords.size === 0}
                         className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                       >
-                        {addingWords ? <span className="animate-spin">⏳</span> : <>+ {selectedWords.size} сөз кошуу</>}
+                        {addingWords ? <span className="animate-spin">⏳</span> : t('aiAddSelected', { count: selectedWords.size })}
                       </button>
                       <button
                         onClick={() => { setAiWords([]); setSelectedWords(new Set()); setAiError(''); }}
                         className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-xl transition-colors"
                       >
-                        Жокко чыгаруу
+                        {tThemes('cancel')}
                       </button>
                     </div>
                     <button
@@ -309,7 +309,7 @@ export default function WordsClient({
                       disabled={aiLoading}
                       className="w-full py-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium hover:bg-indigo-50 rounded-xl transition-colors flex items-center justify-center gap-1"
                     >
-                      {aiLoading ? <span className="animate-spin">⏳</span> : '🔄'} Башка 10 сөз генерациялоо
+                      {aiLoading ? <span className="animate-spin">⏳</span> : '🔄'} {t('aiRegenerate')}
                     </button>
                   </div>
                 )}

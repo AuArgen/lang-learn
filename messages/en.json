@@ -128,7 +128,22 @@
     "allWords": "All words ({count})",
     "textBadge": "Text",
     "deleteWordConfirm": "Are you sure you want to delete this word?",
-    "emptyDictionary": "Dictionary is empty. Add a word from the left."
+    "emptyDictionary": "Dictionary is empty. Add a word from the left.",
+    "wordPlaceholder": "Type a word",
+    "aiTitle": "Generate words with AI",
+    "aiSubtitle": "Gemini AI suggests 10 words automatically",
+    "aiAddError": "Failed to add words.",
+    "aiAddedCount": "{count} words added",
+    "aiSkippedCount": "{count} words skipped (duplicates)",
+    "aiDescriptionLine1": "AI will suggest 10 words for the \"{title}\" theme.",
+    "aiDescriptionLine2": "Select the ones you like and add them to the database.",
+    "aiLoading": "Generating...",
+    "aiGenerateBtn": "Generate 10 words",
+    "aiSelectLabel": "Select words to add:",
+    "aiSelectAll": "Select all",
+    "aiDeselectAll": "Deselect all",
+    "aiAddSelected": "+ Add {count} words",
+    "aiRegenerate": "Generate another 10 words"
   },
   "PlayGame": {
     "speakEn": "Say it in English!",
