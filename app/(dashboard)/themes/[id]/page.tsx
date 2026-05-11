@@ -18,7 +18,7 @@ export default async function ThemeDetailsPage({ params }: { params: { id: strin
   const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRATOR';
   const isProOrTeacher = userRole === 'PRO' || userRole === 'TEACHER';
 
-  const { id } = params;
+  const { id } = await params;
   const [theme, geminiKeyStatus] = await Promise.all([
     themesService.getTheme(id),
     getGeminiKeyStatusAction(),
