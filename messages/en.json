@@ -143,7 +143,13 @@
     "aiSelectAll": "Select all",
     "aiDeselectAll": "Deselect all",
     "aiAddSelected": "+ Add {count} words",
-    "aiRegenerate": "Generate another 10 words"
+    "aiRegenerate": "Generate another 10 words",
+    "listenBtn": "Listen",
+    "checkPronBtn": "Check",
+    "checkListening": "Say it...",
+    "checkCorrect": "Correct! ✅",
+    "checkWrong": "Wrong: \"{heard}\"",
+    "speechNotSupported": "Your browser does not support Speech API"
   },
   "PlayGame": {
     "speakEn": "Say it in English!",

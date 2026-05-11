@@ -143,7 +143,13 @@
     "aiSelectAll": "Выбрать все",
     "aiDeselectAll": "Снять все",
     "aiAddSelected": "+ Добавить {count} слов",
-    "aiRegenerate": "Сгенерировать другие 10 слов"
+    "aiRegenerate": "Сгенерировать другие 10 слов",
+    "listenBtn": "Слушать",
+    "checkPronBtn": "Проверить",
+    "checkListening": "Говорите...",
+    "checkCorrect": "Правильно! ✅",
+    "checkWrong": "Ошибка: \"{heard}\"",
+    "speechNotSupported": "Ваш браузер не поддерживает Speech API"
   },
   "PlayGame": {
     "speakEn": "Скажите по-английски!",

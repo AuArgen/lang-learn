@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(npx prisma *)",
-      "Bash(node -e \"require\\('@google/genai'\\)\")"
+      "Bash(node -e \"require\\('@google/genai'\\)\")",
+      "Bash(npx tsc *)"
     ]
   }
 }

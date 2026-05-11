@@ -143,7 +143,13 @@
     "aiSelectAll": "Баарын тандоо",
     "aiDeselectAll": "Баарын алып салуу",
     "aiAddSelected": "+ {count} сөз кошуу",
-    "aiRegenerate": "Башка 10 сөз генерациялоо"
+    "aiRegenerate": "Башка 10 сөз генерациялоо",
+    "listenBtn": "Угуу",
+    "checkPronBtn": "Текшер",
+    "checkListening": "Айтыңыз...",
+    "checkCorrect": "Туура! ✅",
+    "checkWrong": "Ката: \"{heard}\"",
+    "speechNotSupported": "Браузериңиз Speech API колдобойт"
   },
   "PlayGame": {
     "speakEn": "Англисче айтыңыз!",

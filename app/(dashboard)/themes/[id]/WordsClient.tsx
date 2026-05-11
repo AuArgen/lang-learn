@@ -5,12 +5,21 @@ import { addWordAction, deleteWordAction, updateWordAction } from '@/app/actions
 import { requestPublicationAction } from '@/app/actions/theme-actions';
 import { generateWordsWithAIAction, addGeneratedWordsAction } from '@/app/actions/user-actions';
 import { POPULAR_LANGUAGES } from '@/lib/types/theme';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Volume2, Mic } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import GeminiKeyForm from '@/components/GeminiKeyForm';
 
 interface GeneratedWord { word: string; translation: string; }
+
+const getSpeechLangCode = (code: string) => {
+  const map: Record<string, string> = {
+    'en': 'en-US', 'ru': 'ru-RU', 'tr': 'tr-TR', 'zh': 'zh-CN',
+    'ar': 'ar-SA', 'es': 'es-ES', 'fr': 'fr-FR', 'de': 'de-DE',
+    'ko': 'ko-KR', 'ja': 'ja-JP', 'ky': 'ky-KG',
+  };
+  return map[code] || 'en-US';
+};
 
 export default function WordsClient({
   theme,
@@ -42,6 +51,11 @@ export default function WordsClient({
   const [selectedWords, setSelectedWords] = useState<Set<number>>(new Set());
   const [addingWords, setAddingWords] = useState(false);
   const [addResult, setAddResult] = useState<{ added: number; skipped: number } | null>(null);
+
+  // Per-word pronunciation check state
+  const [listeningWordId, setListeningWordId] = useState<string | null>(null);
+  const [wordCheckResult, setWordCheckResult] = useState<{ id: string; correct: boolean; transcript: string } | null>(null);
+  const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const themeLanguageName = POPULAR_LANGUAGES.find(l => l.code === theme.language)?.name;
   const wordLabelText = themeLanguageName ? t('wordLabelWithLang', { lang: themeLanguageName }) : t('wordLabelFallback');
@@ -109,11 +123,51 @@ export default function WordsClient({
     }
   };
 
+  const speakWord = (word: string) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(word);
+    utter.lang = getSpeechLangCode(theme.language);
+    window.speechSynthesis.speak(utter);
+  };
+
+  const checkPronunciation = (wordId: string, targetWord: string) => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      alert(t('speechNotSupported'));
+      return;
+    }
+    if (listeningWordId) return;
+
+    if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+    setListeningWordId(wordId);
+    setWordCheckResult(null);
+
+    const recognition = new SR();
+    recognition.lang = getSpeechLangCode(theme.language);
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 5;
+
+    recognition.onresult = (e: any) => {
+      const transcripts: string[] = Array.from(e.results[0]).map((r: any) => r.transcript.toLowerCase().trim());
+      const target = targetWord.toLowerCase().trim();
+      const correct = transcripts.some(tr => tr === target || tr.includes(target) || target.includes(tr));
+      setListeningWordId(null);
+      setWordCheckResult({ id: wordId, correct, transcript: transcripts[0] });
+      checkTimeoutRef.current = setTimeout(() => setWordCheckResult(null), 3000);
+    };
+
+    recognition.onerror = () => setListeningWordId(null);
+    recognition.onend = () => setListeningWordId(null);
+    recognition.start();
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/themes" className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition text-slate-600">
-           &larr;
+          &larr;
         </Link>
         <div className="flex-1">
           <div className="flex items-center gap-3">
@@ -128,78 +182,79 @@ export default function WordsClient({
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Left column */}
-        <div className="space-y-5">
-          {/* Manual add/edit form */}
-          <form
-            key={editingWord ? editingWord.id : 'new'}
-            action={handleSubmit}
-            ref={formRef}
-            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"
-          >
-            <h3 className="text-lg font-bold mb-4 text-slate-800">
-              {editingWord ? t('editWord') : t('addWord')}
-            </h3>
+      {/* Top section: forms in 2 columns */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Left: add / edit word form */}
+        <form
+          key={editingWord ? editingWord.id : 'new'}
+          action={handleSubmit}
+          ref={formRef}
+          className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"
+        >
+          <h3 className="text-lg font-bold mb-4 text-slate-800">
+            {editingWord ? t('editWord') : t('addWord')}
+          </h3>
 
-            {errorMsg && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium flex items-start gap-2">
-                <span>⚠️</span><span>{errorMsg}</span>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">{wordLabelText}</label>
-                <input
-                  name="word"
-                  required
-                  defaultValue={editingWord?.word || ''}
-                  className="w-full px-4 py-3 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 font-medium"
-                  placeholder={wordPlaceholder}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('translationLabel')}</label>
-                <input
-                  name="translation"
-                  required
-                  defaultValue={editingWord?.translation || ''}
-                  className="w-full px-4 py-3 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 font-medium"
-                  placeholder={t('translationPlaceholder')}
-                />
-              </div>
-
-              <div className="flex flex-row items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  name="is_manual_input"
-                  id="is_manual_input"
-                  defaultChecked={editingWord?.is_manual_input || false}
-                  className="w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                />
-                <label htmlFor="is_manual_input" className="text-sm font-semibold text-slate-700 select-none cursor-pointer">
-                  {t('manualInputLabel')}
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button type="submit" className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm hover:shadow transition-all active:scale-95 flex items-center justify-center">
-                  {editingWord ? tThemes('save') : t('addWordBtn')}
-                </button>
-                {editingWord && (
-                  <button
-                    type="button"
-                    onClick={() => { setEditingWord(null); setErrorMsg(''); }}
-                    className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all"
-                  >
-                    {tThemes('cancel')}
-                  </button>
-                )}
-              </div>
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium flex items-start gap-2">
+              <span>⚠️</span><span>{errorMsg}</span>
             </div>
-          </form>
+          )}
 
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">{wordLabelText}</label>
+              <input
+                name="word"
+                required
+                defaultValue={editingWord?.word || ''}
+                className="w-full px-4 py-3 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 font-medium"
+                placeholder={wordPlaceholder}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">{t('translationLabel')}</label>
+              <input
+                name="translation"
+                required
+                defaultValue={editingWord?.translation || ''}
+                className="w-full px-4 py-3 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 font-medium"
+                placeholder={t('translationPlaceholder')}
+              />
+            </div>
+
+            <div className="flex flex-row items-center gap-2 pt-2">
+              <input
+                type="checkbox"
+                name="is_manual_input"
+                id="is_manual_input"
+                defaultChecked={editingWord?.is_manual_input || false}
+                className="w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+              />
+              <label htmlFor="is_manual_input" className="text-sm font-semibold text-slate-700 select-none cursor-pointer">
+                {t('manualInputLabel')}
+              </label>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button type="submit" className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm hover:shadow transition-all active:scale-95">
+                {editingWord ? tThemes('save') : t('addWordBtn')}
+              </button>
+              {editingWord && (
+                <button
+                  type="button"
+                  onClick={() => { setEditingWord(null); setErrorMsg(''); }}
+                  className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all"
+                >
+                  {tThemes('cancel')}
+                </button>
+              )}
+            </div>
+          </div>
+        </form>
+
+        {/* Right: AI panel + Gemini key + Publish */}
+        <div className="space-y-5">
           {/* AI generation panel */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <button
@@ -348,32 +403,66 @@ export default function WordsClient({
             )}
           </div>
         </div>
+      </div>
 
-        {/* Right column: word list */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col max-h-[800px]">
-          <div className="p-5 bg-slate-50/50 border-b border-slate-200 font-bold text-slate-800 flex justify-between">
-            <span>{t('allWords', { count: words.length })}</span>
-          </div>
-          <ul className="divide-y divide-slate-100 overflow-y-auto flex-1">
-            {words.map(w => {
-              const isSelected = editingWord?.id === w.id;
-              return (
-                <li key={w.id} className={`p-4 flex items-center justify-between transition-colors ${isSelected ? 'bg-indigo-50/50 border-l-4 border-l-indigo-500' : 'hover:bg-slate-50/50 border-l-4 border-l-transparent'}`}>
-                  <div className="px-1">
+      {/* Bottom section: word list full width */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-5 bg-slate-50/50 border-b border-slate-200 font-bold text-slate-800">
+          {t('allWords', { count: words.length })}
+        </div>
+        <ul className="divide-y divide-slate-100">
+          {words.map(w => {
+            const isEditing = editingWord?.id === w.id;
+            const isListening = listeningWordId === w.id;
+            const result = wordCheckResult?.id === w.id ? wordCheckResult : null;
+
+            return (
+              <li key={w.id} className={`transition-colors ${isEditing ? 'bg-indigo-50/50 border-l-4 border-l-indigo-500' : 'hover:bg-slate-50/50 border-l-4 border-l-transparent'}`}>
+                <div className="p-4 flex items-center justify-between gap-3">
+                  <div className="px-1 flex-1 min-w-0">
                     <p className="font-bold text-slate-800 text-base">
                       {w.word}
-                      {w.is_manual_input && <span className="ml-2 inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded border border-indigo-200">{t('textBadge')}</span>}
+                      {w.is_manual_input && (
+                        <span className="ml-2 inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded border border-indigo-200">{t('textBadge')}</span>
+                      )}
                     </p>
                     <p className="text-sm text-slate-500 mt-0.5">{w.translation}</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
+
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {/* Listen (TTS) */}
+                    <button
+                      onClick={() => speakWord(w.word)}
+                      title={t('listenBtn')}
+                      className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition flex items-center justify-center"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </button>
+
+                    {/* Check pronunciation */}
+                    <button
+                      onClick={() => checkPronunciation(w.id, w.word)}
+                      title={t('checkPronBtn')}
+                      disabled={!!listeningWordId}
+                      className={`p-2 rounded-lg transition flex items-center justify-center ${
+                        isListening
+                          ? 'bg-red-100 text-red-600 animate-pulse'
+                          : 'text-slate-400 hover:text-green-600 hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      <Mic className="w-4 h-4" />
+                    </button>
+
+                    {/* Edit */}
                     <button
                       onClick={() => setEditingWord(w)}
-                      className={`p-2 rounded-lg transition flex items-center justify-center ${isSelected ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
                       title={tThemes('actionEdit')}
+                      className={`p-2 rounded-lg transition flex items-center justify-center ${isEditing ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
                     >
                       <Edit className="w-4 h-4" />
                     </button>
+
+                    {/* Delete */}
                     <form action={async () => {
                       if (confirm(t('deleteWordConfirm'))) {
                         await deleteWordAction(w.id, theme.id);
@@ -385,16 +474,35 @@ export default function WordsClient({
                       </button>
                     </form>
                   </div>
-                </li>
-              );
-            })}
-            {words.length === 0 && (
-              <li className="p-12 text-center flex flex-col items-center">
-                <p className="text-slate-500 font-medium">{t('emptyDictionary')}</p>
+                </div>
+
+                {/* Inline pronunciation feedback */}
+                {(isListening || result) && (
+                  <div className={`mx-4 mb-3 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 ${
+                    isListening
+                      ? 'bg-red-50 border border-red-200 text-red-700'
+                      : result?.correct
+                        ? 'bg-green-50 border border-green-200 text-green-800'
+                        : 'bg-orange-50 border border-orange-200 text-orange-800'
+                  }`}>
+                    {isListening ? (
+                      <><span className="animate-pulse">🎤</span> {t('checkListening')}</>
+                    ) : result?.correct ? (
+                      t('checkCorrect')
+                    ) : (
+                      t('checkWrong', { heard: result?.transcript ?? '' })
+                    )}
+                  </div>
+                )}
               </li>
-            )}
-          </ul>
-        </div>
+            );
+          })}
+          {words.length === 0 && (
+            <li className="p-12 text-center">
+              <p className="text-slate-500 font-medium">{t('emptyDictionary')}</p>
+            </li>
+          )}
+        </ul>
       </div>
     </div>
   );
