@@ -48,6 +48,7 @@ export default function WordsClient({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
   const [aiWords, setAiWords] = useState<GeneratedWord[]>([]);
+  const [aiDescription, setAiDescription] = useState('');
   const [selectedWords, setSelectedWords] = useState<Set<number>>(new Set());
   const [addingWords, setAddingWords] = useState(false);
   const [addResult, setAddResult] = useState<{ added: number; skipped: number } | null>(null);
@@ -88,9 +89,14 @@ export default function WordsClient({
     setAddResult(null);
     setAiLoading(true);
     try {
-      const result = await generateWordsWithAIAction(theme.id);
-      setAiWords(result);
-      setSelectedWords(new Set(result.map((_, i) => i)));
+      const result = await generateWordsWithAIAction(theme.id, aiDescription);
+      if (result.error) {
+        setAiError(result.error);
+        return;
+      }
+
+      setAiWords(result.words);
+      setSelectedWords(new Set(result.words.map((_, i) => i)));
     } catch (e: any) {
       setAiError(e.message || t('errorOccurred'));
     } finally {
@@ -295,7 +301,24 @@ export default function WordsClient({
                       {t('aiDescriptionLine1', { title: theme.title })}
                       {' '}{t('aiDescriptionLine2')}
                     </p>
+                    <div className="mb-4">
+                      <label htmlFor="ai-description" className="block text-sm font-semibold text-slate-700 mb-2">
+                        {t('aiCustomDescriptionLabel')}
+                      </label>
+                      <textarea
+                        id="ai-description"
+                        value={aiDescription}
+                        onChange={(event) => setAiDescription(event.target.value)}
+                        rows={3}
+                        className="w-full px-4 py-3 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all resize-none placeholder:text-slate-400 text-sm"
+                        placeholder={t('aiCustomDescriptionPlaceholder')}
+                      />
+                      <p className="mt-2 text-xs text-slate-500">
+                        {t('aiCustomDescriptionHint')}
+                      </p>
+                    </div>
                     <button
+                      type="button"
                       onClick={handleGenerateAI}
                       disabled={aiLoading}
                       className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"

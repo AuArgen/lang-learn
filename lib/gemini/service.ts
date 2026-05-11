@@ -15,11 +15,15 @@ export async function generateWordsForTheme(
   apiKey: string,
   themeTitle: string,
   themeLanguage: string,
-  existingWords: string[] = []
+  existingWords: string[] = [],
+  customDescription = ''
 ): Promise<GeneratedWord[]> {
   const langName = LANG_NAMES[themeLanguage] || 'English';
   const skipLine = existingWords.length > 0
     ? `\nAlready added words (do NOT repeat these): ${existingWords.slice(0, 30).join(', ')}`
+    : '';
+  const customDescriptionLine = customDescription.trim()
+    ? `\nTeacher's additional description/request: ${customDescription.trim()}`
     : '';
 
   const prompt = `You are a professional vocabulary teacher creating word lists for language learners.
@@ -27,6 +31,7 @@ export async function generateWordsForTheme(
 Theme/Topic: "${themeTitle}"
 Target language of words: ${langName}
 Translation language: Kyrgyz (Кыргызча)
+${customDescriptionLine}
 ${skipLine}
 
 Your task: Generate exactly 10 useful vocabulary words for this topic.
@@ -35,6 +40,7 @@ IMPORTANT RULES:
 - Return ONLY a valid JSON array, no markdown, no explanation, no extra text
 - Each item must have "word" (in ${langName}) and "translation" (in Kyrgyz)
 - Words must be directly related to "${themeTitle}"
+- If the teacher provided an additional description/request, follow it when choosing words
 - Choose practical, common words a learner would actually use
 - Mix word types: nouns, verbs, adjectives when appropriate
 - Kyrgyz translations must be accurate and natural
@@ -61,8 +67,8 @@ Now generate 10 words for topic "${themeTitle}":`;
       contents: prompt,
     });
     responseText = response.text || '';
-  } catch (err: any) {
-    const msg = err?.message || '';
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : '';
     if (msg.includes('API_KEY_INVALID') || msg.includes('API key not valid')) {
       throw new Error('Gemini API ключ жараксыз. https://aistudio.google.com/api-keys сайтынан жаңы ключ алыңыз.');
     }

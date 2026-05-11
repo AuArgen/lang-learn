@@ -6,6 +6,11 @@ import { wordsService } from '@/lib/firebase/services/words';
 import { generateWordsForTheme, GeneratedWord } from '@/lib/gemini/service';
 import { revalidatePath } from 'next/cache';
 
+export type GenerateWordsWithAIResult = {
+  words: GeneratedWord[];
+  error?: string;
+};
+
 export async function saveGeminiKeyAction(apiKey: string): Promise<void> {
   const user = await getServerUser();
   if (!user) throw new Error('Авторизациядан өтүңүз.');
@@ -51,33 +56,59 @@ export async function getGeminiKeyStatusAction(): Promise<{ hasKey: boolean; mas
   return { hasKey: true, maskedKey };
 }
 
-export async function generateWordsWithAIAction(themeId: string): Promise<GeneratedWord[]> {
-  const user = await getServerUser();
-  if (!user) throw new Error('Авторизациядан өтүңүз.');
+export async function generateWordsWithAIAction(
+  themeId: string,
+  customDescription = ''
+): Promise<GenerateWordsWithAIResult> {
+  try {
+    const user = await getServerUser();
+    if (!user) {
+      return { words: [], error: 'Авторизациядан өтүңүз.' };
+    }
 
-  const dbUser = await prisma.user.findUnique({
-    where: { id: user.userId },
-    select: { gemini_api_key: true },
-  });
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { gemini_api_key: true },
+    });
 
-  if (!dbUser?.gemini_api_key) {
-    throw new Error('Биринчи Gemini API ключуңузду киргизиңиз. Төмөнкү формадан кошуңуз.');
+    if (!dbUser?.gemini_api_key) {
+      return { words: [], error: 'Биринчи Gemini API ключуңузду киргизиңиз. Төмөнкү формадан кошуңуз.' };
+    }
+
+    const theme = await prisma.theme.findUnique({ where: { id: themeId } });
+    if (!theme) {
+      return { words: [], error: 'Тема табылган жок.' };
+    }
+
+    if (theme.author_id !== user.userId) {
+      const role = user.role?.toUpperCase();
+      if (role !== 'ADMIN' && role !== 'ADMINISTRATOR') {
+        return { words: [], error: 'Бул темага жетүүгө уруксатыңыз жок.' };
+      }
+    }
+
+    const existingWords = await prisma.word.findMany({
+      where: { theme_id: themeId },
+      select: { word: true },
+    });
+
+    const words = await generateWordsForTheme(
+      dbUser.gemini_api_key,
+      theme.title,
+      theme.language || 'en',
+      existingWords.map(w => w.word),
+      customDescription
+    );
+
+    return { words };
+  } catch (error) {
+    return {
+      words: [],
+      error: error instanceof Error
+        ? error.message
+        : 'AI генерациясында белгисиз ката кетти. Кайра аракет кылыңыз.',
+    };
   }
-
-  const theme = await prisma.theme.findUnique({ where: { id: themeId } });
-  if (!theme) throw new Error('Тема табылган жок.');
-
-  const existingWords = await prisma.word.findMany({
-    where: { theme_id: themeId },
-    select: { word: true },
-  });
-
-  return generateWordsForTheme(
-    dbUser.gemini_api_key,
-    theme.title,
-    theme.language || 'en',
-    existingWords.map(w => w.word)
-  );
 }
 
 export async function addGeneratedWordsAction(
