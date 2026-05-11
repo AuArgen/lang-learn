@@ -72,7 +72,7 @@ Now generate 10 words for topic "${themeTitle}":`;
   let responseText: string;
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview",
+      model: "gemini-2.5-flash",
       contents: prompt,
     });
     responseText = response.text || "";
