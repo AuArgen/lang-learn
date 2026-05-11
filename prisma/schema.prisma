@@ -15,6 +15,7 @@ model User {
   email                   String?   @unique
   role                    String    @default("USER")
   subscription_expires_at DateTime?
+  gemini_api_key          String?
   created_at              DateTime  @default(now())
   updated_at              DateTime  @updatedAt
 

@@ -16,6 +16,8 @@ interface PlayContainerProps {
   theme: any;
   words: any[];
   themeId: string;
+  isLocal?: boolean;
+  onBackToSetup?: () => void;
 }
 
 const getSpeechLangCode = (code: string) => {
@@ -37,7 +39,7 @@ const getLangSpeakLabel = (code: string) => {
   return map[code] || 'Англисче айтыңыз!';
 };
 
-export default function PlayContainer({ theme, words, themeId }: PlayContainerProps) {
+export default function PlayContainer({ theme, words, themeId, isLocal, onBackToSetup }: PlayContainerProps) {
   const router = useRouter();
   const t = useTranslations('PlayGame');
   const themeLangCode = theme?.language || 'en';
@@ -175,8 +177,10 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
 
   const startGame = async () => {
     if (mode === 'solo' && !playerName) return alert(t('enterNameAlert'));
-    // create session
-    const gId = await createGameSessionAction(themeId, mode, true);
+    let gId: string | null = null;
+    if (!isLocal) {
+      gId = await createGameSessionAction(themeId, mode, true);
+    }
     setGameId(gId);
     
     // Shuffle words randomly
@@ -426,7 +430,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
   const endGame = async (finalHistory: any[] = gameHistory) => {
     setStage('finished');
     const timeTakenSec = selectedTimeSec - timeLeft;
-    if (gameId) {
+    if (gameId && !isLocal) {
       let finalPlayerName = playerName;
       let finalScore = score;
       let finalMistakes = mistakes;
@@ -455,7 +459,7 @@ export default function PlayContainer({ theme, words, themeId }: PlayContainerPr
         <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-white/50 backdrop-blur-sm">
           {/* Back button */}
           <button
-            onClick={() => router.push('/')}
+            onClick={() => onBackToSetup ? onBackToSetup() : router.push('/')}
             className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-6 font-medium"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

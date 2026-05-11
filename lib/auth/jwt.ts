@@ -19,7 +19,7 @@ export async function signJwtToken(payload: UserJwtPayload): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('30d') // Token valid for 30 days
+    .setExpirationTime('7d')
     .sign(secret);
 }
 
