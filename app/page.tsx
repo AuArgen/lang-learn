@@ -42,7 +42,7 @@ export default async function HomePage() {
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN' || user?.role?.toUpperCase() === 'ADMINISTRATOR';
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-16 md:pb-0">
+    <div className="min-h-screen bg-white flex flex-col pb-16 md:pb-0 overflow-x-hidden">
 
       {/* ── Header ── */}
       <header className="bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
@@ -74,76 +74,156 @@ export default async function HomePage() {
       <main className="flex-1">
 
         {/* ── HERO ── */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 text-white">
-          {/* background decoration */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full" />
-            <div className="absolute top-1/2 -left-32 w-64 h-64 bg-white/5 rounded-full" />
-            <div className="absolute bottom-0 right-1/3 w-48 h-48 bg-white/5 rounded-full" />
+        <section className="relative overflow-hidden bg-[#060914] text-white">
+          {/* Ambient glow orbs */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-40 left-1/3 w-[700px] h-[700px] bg-cyan-500/10 rounded-full blur-[130px]" />
+            <div className="absolute top-1/3 -right-40 w-[600px] h-[600px] bg-violet-600/15 rounded-full blur-[120px]" />
+            <div className="absolute -bottom-20 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px]" />
           </div>
 
-          <div className="relative max-w-6xl mx-auto px-4 py-20 md:py-28">
-            <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 px-4 py-1.5 rounded-full text-sm font-semibold mb-6 backdrop-blur-sm">
-                <span>🎓</span>
-                <span>{t('tagline')}</span>
-              </div>
+          {/* Subtle grid overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)', backgroundSize: '60px 60px' }}
+          />
 
-              <h1 className="text-4xl md:text-6xl font-black leading-tight tracking-tight mb-5">
-                {t('heroTitle1')}<br />
-                <span className="text-yellow-300">{t('heroTitle2')}</span>
-              </h1>
+          <div className="relative max-w-6xl mx-auto px-4 pt-20 pb-16 md:pt-28 md:pb-20">
+            <div className="grid md:grid-cols-2 gap-14 items-center">
 
-              <p className="text-lg md:text-xl text-indigo-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-                {t('heroDesc')}
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                {user ? (
-                  <Link
-                    href="/themes"
-                    className="px-8 py-4 bg-white text-indigo-700 font-bold rounded-full text-base hover:bg-indigo-50 transition shadow-lg shadow-black/20 flex items-center justify-center gap-2"
-                  >
-                    <span>🗂️</span> {t('heroBtnCabinet')}
-                  </Link>
-                ) : (
-                  <a
-                    href={authUrl}
-                    className="px-8 py-4 bg-white text-indigo-700 font-bold rounded-full text-base hover:bg-indigo-50 transition shadow-lg shadow-black/20 flex items-center justify-center gap-2"
-                  >
-                    <span>🏫</span> {t('heroBtnTeacher')}
-                  </a>
-                )}
-                <Link
-                  href="/play/local"
-                  className="px-8 py-4 bg-white/15 hover:bg-white/25 border border-white/30 text-white font-bold rounded-full text-base transition flex items-center justify-center gap-2"
-                >
-                  <span>✏️</span> {t('heroBtnTryFree')}
-                </Link>
-                {themes.length > 0 && (
-                  <a
-                    href="#games"
-                    className="px-8 py-4 bg-white/15 hover:bg-white/25 border border-white/30 text-white font-bold rounded-full text-base transition flex items-center justify-center gap-2"
-                  >
-                    <span>🎮</span> {t('heroBtnPlay')}
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* floating stat cards */}
-            <div className="mt-16 grid grid-cols-3 gap-4 max-w-lg mx-auto">
-              {[
-                { emoji: '🎙️', label: locale === 'ru' ? 'Голосовые игры' : locale === 'en' ? 'Voice games' : 'Үн оюндар' },
-                { emoji: '🤖', label: locale === 'ru' ? 'AI генерация' : locale === 'en' ? 'AI generation' : 'AI генерация' },
-                { emoji: '🆓', label: locale === 'ru' ? 'Бесплатно' : locale === 'en' ? 'Free to play' : 'Бекер' },
-              ].map((s) => (
-                <div key={s.label} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 text-center">
-                  <div className="text-3xl mb-1">{s.emoji}</div>
-                  <div className="text-xs font-semibold text-indigo-100">{s.label}</div>
+              {/* ── Left: text ── */}
+              <div className="text-center md:text-left">
+                <div className="inline-flex items-center gap-2 bg-white/8 border border-white/10 px-4 py-1.5 rounded-full text-sm font-semibold mb-7 text-slate-300">
+                  <span>🎓</span> {t('tagline')}
                 </div>
-              ))}
+
+                <h1 className="text-5xl md:text-6xl font-black leading-[1.1] tracking-tight mb-5">
+                  {t('heroTitle1')}<br />
+                  <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">
+                    {t('heroTitle2')}
+                  </span>
+                </h1>
+
+                <p className="text-slate-400 text-lg leading-relaxed mb-10 max-w-lg mx-auto md:mx-0">
+                  {t('heroDesc')}
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                  {user ? (
+                    <Link
+                      href="/themes"
+                      className="px-7 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-2xl text-base transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                    >
+                      <span>🗂️</span> {t('heroBtnCabinet')}
+                    </Link>
+                  ) : (
+                    <a
+                      href={authUrl}
+                      className="px-7 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-2xl text-base transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                    >
+                      <span>🏫</span> {t('heroBtnTeacher')}
+                    </a>
+                  )}
+                  <Link
+                    href="/play/local"
+                    className="px-7 py-4 bg-white/8 hover:bg-white/14 border border-white/12 text-white font-bold rounded-2xl text-base transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                  >
+                    <span>✏️</span> {t('heroBtnTryFree')}
+                  </Link>
+                </div>
+
+                {/* Stats row */}
+                <div className="mt-12 flex items-center gap-8 justify-center md:justify-start">
+                  {[
+                    { num: '100%', label: locale === 'ru' ? 'Бесплатно' : locale === 'en' ? 'Free' : 'Бекер' },
+                    { num: 'AI', label: locale === 'ru' ? 'Генерация слов' : locale === 'en' ? 'AI words' : 'AI сөздөр' },
+                    { num: '10+', label: locale === 'ru' ? 'Языков' : locale === 'en' ? 'Languages' : 'Тилдер' },
+                  ].map((s, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      {i > 0 && <div className="w-px h-8 bg-white/10" />}
+                      <div>
+                        <div className="text-2xl font-black text-white leading-none">{s.num}</div>
+                        <div className="text-xs text-slate-500 mt-0.5 font-medium">{s.label}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Right: game card mockup ── */}
+              <div className="hidden md:flex items-center justify-center">
+                <div className="relative">
+                  {/* Glow behind card */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-violet-600/20 rounded-3xl blur-2xl scale-110" />
+
+                  {/* Main card */}
+                  <div className="relative bg-slate-800/70 backdrop-blur-xl border border-white/10 rounded-3xl p-7 w-[320px] shadow-2xl shadow-black/60">
+
+                    {/* Progress bar */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-full w-3/5 bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-400">3/5</span>
+                    </div>
+
+                    {/* Hearts */}
+                    <div className="flex justify-between items-center mb-5">
+                      <div className="flex gap-1 text-base">❤️❤️❤️❤️<span className="opacity-30">❤️</span></div>
+                      <div className="text-sm font-black text-emerald-400">70 pts</div>
+                    </div>
+
+                    {/* Word card */}
+                    <div className="bg-gradient-to-br from-slate-700/60 to-slate-700/30 border border-white/8 rounded-2xl p-5 text-center mb-4">
+                      <p className="text-slate-400 text-xs font-medium mb-1 uppercase tracking-wider">
+                        {locale === 'ru' ? 'Перевод' : locale === 'en' ? 'Translation' : 'Котормосу'}
+                      </p>
+                      <h3 className="text-4xl font-black text-white mb-1">🍎 Алма</h3>
+                    </div>
+
+                    {/* Text input */}
+                    <div className="bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 flex items-center gap-2 mb-3">
+                      <span className="text-white font-medium text-sm">Apple</span>
+                      <span className="w-0.5 h-4 bg-cyan-400 rounded-full animate-pulse" />
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 rounded-xl py-3 flex items-center justify-center gap-2">
+                        <span className="text-lg">🎙️</span>
+                        <span className="text-xs font-bold text-cyan-300">
+                          {locale === 'ru' ? 'Говорить' : locale === 'en' ? 'Speak' : 'Айт'}
+                        </span>
+                      </div>
+                      <div className="bg-slate-700/40 border border-slate-600/30 rounded-xl py-3 flex items-center justify-center">
+                        <span className="text-xs font-bold text-slate-400">
+                          {locale === 'ru' ? 'Пропустить →' : locale === 'en' ? 'Skip →' : 'Өткөр →'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Floating: correct badge */}
+                  <div className="absolute -top-5 -right-5 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-bold px-4 py-2 rounded-2xl shadow-lg shadow-emerald-500/40 flex items-center gap-1.5">
+                    <span>✓</span>
+                    {locale === 'ru' ? 'Верно!' : locale === 'en' ? 'Correct!' : 'Туура!'}
+                  </div>
+
+                  {/* Floating: score badge */}
+                  <div className="absolute -bottom-5 -left-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-2xl shadow-lg shadow-violet-500/40 flex items-center gap-1">
+                    <span>⭐</span> +10 pts
+                  </div>
+                </div>
+              </div>
+
             </div>
+          </div>
+
+          {/* Wave divider */}
+          <div className="relative h-16 overflow-hidden">
+            <svg viewBox="0 0 1440 64" className="absolute bottom-0 w-full text-slate-50" fill="currentColor" preserveAspectRatio="none">
+              <path d="M0,32 C360,64 1080,0 1440,32 L1440,64 L0,64 Z" />
+            </svg>
           </div>
         </section>
 
