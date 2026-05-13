@@ -15,7 +15,7 @@
 
 ## Проект: BilimAi Learn Lang
 
-Языковая игра для изучения английского через Web Speech API. Пользователи создают темы со словами, играют в игры с произношением.
+Языковая игра для изучения языков. Учителя создают темы со словами, ученики играют в игры с произношением (голос или текст).
 
 **Стек:**
 - Next.js **16.2.2** (нестандартная версия — читай `node_modules/next/dist/docs/` перед изменением API)
@@ -38,24 +38,35 @@ app/
   (dashboard)/                # Защищённые страницы (требуют auth)
     layout.tsx
     themes/                   # Список тем пользователя
+      page.tsx                # Показывает только темы текущего юзера (admin — все)
+      ThemesClient.tsx        # CRUD тем, кнопки публикации
+      [id]/
+        page.tsx              # Детальная страница темы (слова)
+        WordsClient.tsx       # Добавление/редактирование/удаление слов + AI
+        edit/page.tsx
+        history/page.tsx
     admin/                    # Панель администратора
     reports/
-  actions/                    # Server Actions
+  actions/                    # Server Actions — все мутации только здесь
     admin-actions.ts
     game-actions.ts
     locale-action.ts
     theme-actions.ts
-    word-actions.ts
-    user-actions.ts             # saveGeminiKeyAction, getGeminiKeyStatusAction, generateWordsWithAIAction, addGeneratedWordsAction
+    word-actions.ts           # assertThemeOwner() — только владелец/admin может менять слова
+    user-actions.ts           # saveGeminiKeyAction, getGeminiKeyStatusAction,
+                              # generateWordsWithAIAction, addGeneratedWordsAction
   api/
     auth/callback/            # OAuth callback
     auth/logout/
-  play/[id]/                  # Игровой экран (публичный)
+    transcribe/route.ts       # POST: Groq Whisper транскрипция аудио; GET: { available: bool }
+  play/
+    [themeId]/page.tsx        # Игровой экран (публичный, без авторизации)
+    local/page.tsx            # Игра без сохранения (браузерный localStorage)
 
 components/
   LanguageSwitcher.tsx        # Переключатель языка интерфейса
   MobileBottomNav.tsx         # Нижняя навигация мобильных
-  PlayContainer.tsx           # Игровой контейнер (Web Speech API)
+  PlayContainer.tsx           # Игровой контейнер — см. раздел "Игра" ниже
   GeminiKeyForm.tsx           # Форма добавления/редактирования Gemini API ключа
   auth/                       # Auth компоненты
 
@@ -70,7 +81,7 @@ lib/
   firebase/
     client.ts                 # Firebase client init
     services/
-      themes.ts               # themesService (CRUD тем через Prisma)
+      themes.ts               # themesService (CRUD тем через Prisma, не Firebase)
       words.ts                # wordsService
       games.ts                # gamesService
   types/                      # TypeScript типы
@@ -96,7 +107,7 @@ next.config.ts                # Next.js конфиг
 - 1 тема на пользователя (`hasReachedThemeLimit` — лимит 1)
 - 100 слов на тему (`hasReachedWordLimit` — лимит 100)
 
-**Поле `gemini_api_key`** в модели `User` — персональный ключ Gemini AI (опциональный, зашифрован в БД)
+**Поле `gemini_api_key`** в модели `User` — персональный ключ Gemini AI (опциональный)
 
 **Статусы темы:** `draft` → `pending` → `published`
 
@@ -110,7 +121,7 @@ next.config.ts                # Next.js конфиг
 - Middleware (`middleware.ts`) верифицирует токен и добавляет заголовки `x-user-id`, `x-user-role`
 - Получение пользователя на сервере: `getServerUser()` из `lib/auth/server-auth.ts`
 - Внешний OAuth: `AUTH_SERVICE_URL` (env)
-- Публичные пути: `/`, `/api/auth/callback`, `/play/`
+- Публичные пути: `/`, `/api/auth/callback`, `/play/`, `/api/transcribe`
 
 ---
 
@@ -132,7 +143,7 @@ next.config.ts                # Next.js конфиг
 | `AUTH_SERVICE_URL` | URL внешнего OAuth сервиса |
 | `APP_URL` | Публичный URL приложения |
 | `DATABASE_URL` | (опционально) путь к SQLite |
-| `GROQ_API_KEY` | (опционально) Groq API ключ для Whisper распознавания (`app/api/transcribe/`) |
+| `GROQ_API_KEY` | (опционально) Groq API ключ для Whisper распознавания — `app/api/transcribe/route.ts` |
 
 ---
 
@@ -148,13 +159,45 @@ npx prisma db push # Применить изменения схемы
 
 ---
 
+## Игра (PlayContainer.tsx)
+
+### Распознавание речи — три уровня (автоматическое переключение)
+
+1. **Groq Whisper** (если `GROQ_API_KEY` задан) — лучшее качество, работает во всех браузерах.
+   - Клиент записывает аудио через `MediaRecorder`
+   - Отправляет на `POST /api/transcribe`
+   - Сервер передаёт в Groq `whisper-large-v3-turbo`
+   - Кнопка микрофона показывает "⏺ REC" во время записи
+
+2. **Web Speech API** (Chrome/Android, без ключа) — берёт `maxAlternatives = 5` и проверяет все варианты.
+
+3. **Текстовый ввод** — если браузер не поддерживает Speech API (iOS Safari, Firefox), показывается поле ввода для всех слов.
+
+### Алгоритм сравнения ответа
+
+`isSpeechMatch(transcript, word)` — используется и для голоса, и при выборе лучшей альтернативы:
+- `transcript.includes(word) || word.includes(transcript)` — точное/частичное вхождение
+- Levenshtein distance ≤ `max(1, floor(word.length × 0.25))` — нечёткое совпадение
+
+### UX-механики (solo режим)
+
+- **Progress bar** — тонкая полоска вверху, показывает прогресс по словам
+- **Сердечки** — 5 ❤, при 0 игра заканчивается досрочно
+- **Streak** — 🔥 показывается при 2+ правильных ответах подряд
+- **Правильный ответ при пропуске** — после 3 ошибок показывается "Туура жооп: [слово]"
+- **Экран результатов** — статистика (точность, очки, время) + список всех слов с ✓/✗
+
+---
+
 ## Важные соглашения
 
 1. **Server Actions** — все мутации через файлы в `app/actions/`, не через API routes
-2. **`lib/firebase/services/`** — несмотря на имя папки, сервисы используют Prisma, не Firebase напрямую
-3. **`export const dynamic = 'force-dynamic'`** — добавляй на страницы, которые читают из БД (SQLite недоступен при build)
-4. **Tailwind v4** — конфиг через `postcss.config.mjs`, не через `tailwind.config.js`
-5. **Docker** — БД монтируется как volume, не включена в образ
+2. **`assertThemeOwner(themeId, user)`** в `word-actions.ts` — вызывать перед любой мутацией слов; пропускает только ADMIN/ADMINISTRATOR
+3. **`lib/firebase/services/`** — несмотря на имя папки, сервисы используют Prisma, не Firebase напрямую
+4. **`export const dynamic = 'force-dynamic'`** — добавляй на страницы, которые читают из БД (SQLite недоступен при build)
+5. **Tailwind v4** — конфиг через `postcss.config.mjs`, не через `tailwind.config.js`
+6. **Docker** — БД монтируется как volume, не включена в образ
+7. **Дубликаты слов** — проверяется только поле `word` (не перевод), регистронезависимо
 
 ---
 
@@ -165,3 +208,4 @@ npx prisma db push # Применить изменения схемы
 - Новая env переменная → добавь в таблицу
 - Изменение лимитов → обнови "База данных"
 - Новая локаль → обнови "i18n"
+- Изменение логики игры → обнови раздел "Игра"
