@@ -107,7 +107,15 @@
     "unpublishConfirm": "Are you sure you want to unpublish? The theme will return to draft status.",
     "unpublish": "Unpublish",
     "noThemes": "No themes",
-    "noThemesDesc": "Add a new theme from the form on the left."
+    "noThemesDesc": "Add a new theme from the form on the left.",
+    "guideTitle": "How to get started?",
+    "guideStep1": "Create a theme",
+    "guideStep1Desc": "Fill in the form on the left",
+    "guideStep2": "Add words",
+    "guideStep2Desc": "Click the «Add word» button",
+    "guideStep3": "Start playing",
+    "guideStep3Desc": "Click the «Start game» button",
+    "noWordsWarning": "No words added — game cannot start"
   },
   "ThemeDetails": {
     "wordLabelWithLang": "Word ({lang})",

@@ -18,8 +18,39 @@ export default function ThemesClient({ themes, isAdmin = false }: ThemesClientPr
   const formRef = useRef<HTMLFormElement>(null);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+      {/* Жол көрсөткүч: 3 кадам */}
+      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl px-6 py-4">
+        <p className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-3">{t('guideTitle')}</p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0">1</div>
+            <div>
+              <p className="font-semibold text-slate-800 text-sm">{t('guideStep1')}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('guideStep1Desc')}</p>
+            </div>
+          </div>
+          <div className="hidden sm:flex items-center text-slate-300">→</div>
+          <div className="flex items-start gap-3 flex-1">
+            <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0">2</div>
+            <div>
+              <p className="font-semibold text-slate-800 text-sm">{t('guideStep2')}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('guideStep2Desc')}</p>
+            </div>
+          </div>
+          <div className="hidden sm:flex items-center text-slate-300">→</div>
+          <div className="flex items-start gap-3 flex-1">
+            <div className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0">3</div>
+            <div>
+              <p className="font-semibold text-slate-800 text-sm">{t('guideStep3')}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('guideStep3Desc')}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <div className="flex flex-col lg:flex-row gap-8">
       {/* Сол жак: Форма (Left side: Form) */}
       <div className="w-full lg:w-1/3">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-6">
@@ -132,9 +163,15 @@ export default function ThemesClient({ themes, isAdmin = false }: ThemesClientPr
                             {POPULAR_LANGUAGES.find(l => l.code === theme.language)?.name || theme.language}
                           </span>
                         )}
-                        <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-semibold">
-                          {t('wordsCount', { count: theme.words_count || 0 })}
-                        </span>
+                        {(theme.words_count || 0) === 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-semibold border border-amber-200">
+                            <span>⚠</span> {t('noWordsWarning')}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-semibold">
+                            {t('wordsCount', { count: theme.words_count || 0 })}
+                          </span>
+                        )}
                         {/* Статусу төмөн жагында чыгат */}
                         {theme.status === 'published' && <span className="inline-flex items-center px-2 py-1 rounded-md bg-green-100 text-green-700 text-xs font-semibold"><CheckCircle className="w-3 h-3 mr-1"/> {t('statusPublished')}</span>}
                         {theme.status === 'pending' && <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-700 text-xs font-semibold"><Info className="w-3 h-3 mr-1"/> {t('statusPending')}</span>}
@@ -144,18 +181,49 @@ export default function ThemesClient({ themes, isAdmin = false }: ThemesClientPr
                     <td className="px-5 py-4 text-sm tracking-tight text-slate-500 whitespace-nowrap align-top pt-5">
                       {new Date(theme.created_at).toLocaleDateString('ru-RU')}
                     </td>
-                    <td className="px-5 py-4 text-right align-top pt-5">
+                    <td className="px-5 py-4 text-right align-top pt-4">
                       <div className="flex flex-col items-end gap-2">
+                        {/* Негизги иш-аракеттер */}
                         <div className="flex items-center gap-1.5">
-                          <button 
+                          <Link
+                            href={`/themes/${theme.id}`}
+                            className={(theme.words_count || 0) === 0
+                              ? "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition shadow-sm shadow-indigo-300 ring-2 ring-indigo-300 ring-offset-1"
+                              : "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition"
+                            }
+                          >
+                            <Plus className="w-4 h-4" />
+                            {t('actionAddWord')}
+                          </Link>
+
+                          <Link
+                            href={`/play/${theme.id}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition"
+                          >
+                            <Play className="w-4 h-4" />
+                            {t('actionPlay')}
+                          </Link>
+                        </div>
+
+                        {/* Кошумча иш-аракеттер */}
+                        <div className="flex items-center gap-1">
+                          <button
                             onClick={() => setEditingTheme(theme)}
-                            className={`p-2 rounded-lg transition font-medium flex items-center justify-center ${isSelected ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
+                            className={`p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-medium ${isSelected ? 'bg-indigo-100 text-indigo-700' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
                             title={t('actionEdit')}
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-3.5 h-3.5" />
                           </button>
-                          
-                          <form 
+
+                          <Link
+                            href={`/themes/${theme.id}/history`}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            title={t('actionHistory')}
+                          >
+                            <History className="w-3.5 h-3.5" />
+                          </Link>
+
+                          <form
                             action={async () => {
                               if (theme.words_count > 0) {
                                 alert(t('deleteError'));
@@ -167,38 +235,14 @@ export default function ThemesClient({ themes, isAdmin = false }: ThemesClientPr
                               }
                             }}
                           >
-                            <button 
-                              type="submit" 
-                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition flex items-center justify-center gap-2"
+                            <button
+                              type="submit"
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
                               title={t('actionDelete')}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </form>
-
-                          <Link 
-                            href={`/themes/${theme.id}`} 
-                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
-                            title={t('actionAddWord')}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Link>
-
-                          <Link 
-                            href={`/themes/${theme.id}/history`} 
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title={t('actionHistory')}
-                          >
-                            <History className="w-4 h-4" />
-                          </Link>
-                          
-                          <Link 
-                            href={`/play/${theme.id}`} 
-                            className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition"
-                            title={t('actionPlay')}
-                          >
-                            <Play className="w-4 h-4" />
-                          </Link>
                         </div>
 
                         {/* Публикацияга жиберүү баскычы ылдыйда */}
@@ -277,6 +321,7 @@ export default function ThemesClient({ themes, isAdmin = false }: ThemesClientPr
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
