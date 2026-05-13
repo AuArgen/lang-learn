@@ -10,9 +10,41 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: { themeId: string } }): Promise<Metadata> {
   const { themeId } = await params;
   const theme = await themesService.getTheme(themeId);
-  
+
+  if (!theme) {
+    return { title: 'Оюн — BilimAi Learn Lang' };
+  }
+
+  const title = `${theme.title} — BilimAi Learn Lang`;
+  const description = theme.description
+    ? `${theme.description} · ${theme.words_count} сөз · Тил үйрөнүү оюну`
+    : `«${theme.title}» темасы боюнча тил үйрөнүү оюну. ${theme.words_count} сөз.`;
+  const url = `${process.env.APP_URL ?? ''}/play/${themeId}`;
+
   return {
-    title: theme ? `Оюн: ${theme.title}` : 'Оюн',
+    title,
+    description,
+    keywords: [theme.title, 'тил үйрөнүү', 'сөздүк оюн', 'BilimAi', theme.language ?? 'en'].filter(Boolean),
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'BilimAi Learn Lang',
+      type: 'website',
+      locale: theme.language ?? 'ky',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
+    alternates: {
+      canonical: url,
+    },
+    robots: {
+      index: theme.status === 'published',
+      follow: true,
+    },
   };
 }
 

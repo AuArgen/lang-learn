@@ -46,7 +46,8 @@ function levenshtein(a: string, b: string): number {
 
 function isSpeechMatch(transcript: string, word: string): boolean {
   if (!transcript || !word) return false;
-  if (transcript.includes(word) || word.includes(transcript)) return true;
+  if (transcript === word) return true;
+  if (transcript.includes(word) && word.length >= 3) return true;
   const maxDist = Math.max(1, Math.floor(word.length * 0.25));
   return levenshtein(transcript, word) <= maxDist;
 }
