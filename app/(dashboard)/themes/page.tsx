@@ -31,10 +31,23 @@ export default async function ThemesPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t('myThemes')}</h2>
-        <p className="text-slate-500 mt-2">{t('themesDesc')}</p>
+    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-50 rounded-full blur-3xl -ml-10 -mb-10 opacity-60"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-4xl font-extrabold tracking-tight text-slate-800 flex items-center gap-3">
+              <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                {t('myThemes')}
+              </span>
+              <span className="text-3xl">🎯</span>
+            </h2>
+            <p className="text-slate-500 mt-3 text-lg font-medium max-w-2xl">{t('themesDesc')}</p>
+          </div>
+        </div>
       </div>
 
       <ThemesClient themes={themes} isAdmin={isAdmin} />

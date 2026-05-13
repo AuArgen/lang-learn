@@ -68,8 +68,8 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   const [stage, setStage] = useState<'lobby' | 'countdown' | 'playing' | 'finished'>('lobby');
   const [mode, setMode] = useState<'solo' | 'team'>('solo');
   const [playerName, setPlayerName] = useState('');
-  const [team1Name, setTeam1Name] = useState(t('team1Default'));
-  const [team2Name, setTeam2Name] = useState(t('team2Default'));
+  const [team1Name, setTeam1Name] = useState('');
+  const [team2Name, setTeam2Name] = useState('');
   const [gameId, setGameId] = useState<string | null>(null);
 
   // Shared Logic state
@@ -140,6 +140,11 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       }
     }
   }, [useGroq, currentWordIndex, themeLangCode, stage, gameWords, turnState, answeringTeam, t]);
+
+  useEffect(() => {
+    setTeam1Name(t('team1Default'));
+    setTeam2Name(t('team2Default'));
+  }, [t]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -311,14 +316,19 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
         if (blob.size < 1000) { setIsListening(false); return; }
 
+        const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
         const form = new FormData();
-        form.append('audio', blob, 'recording.webm');
+        form.append('audio', blob, `recording.${ext}`);
         form.append('lang', getSpeechLangCode(themeLangCode));
 
         try {
           const res = await fetch('/api/transcribe', { method: 'POST', body: form });
           const data = await res.json();
-          if (data.text) handleSpeechResult(data.text.toLowerCase().trim());
+          if (data.text) {
+            handleSpeechResult(data.text.toLowerCase().trim());
+          } else {
+            console.error('Groq error:', data.status, data.detail || data.error);
+          }
         } catch (e) {
           console.error('Groq transcription failed:', e);
         } finally {
