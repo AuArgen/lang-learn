@@ -87,6 +87,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   const [selectedTimeSec, setSelectedTimeSec] = useState(60);
   const [hasSpeech, setHasSpeech] = useState(true);
   const [useGroq, setUseGroq] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [streak, setStreak] = useState(0);
   const MAX_HEARTS = 5;
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -313,9 +314,11 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
 
       recorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
+        setIsListening(false);
         const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
-        if (blob.size < 1000) { setIsListening(false); return; }
+        if (blob.size < 1000) { return; }
 
+        setIsProcessing(true);
         const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
         const form = new FormData();
         form.append('audio', blob, `recording.${ext}`);
@@ -332,14 +335,14 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         } catch (e) {
           console.error('Groq transcription failed:', e);
         } finally {
-          setIsListening(false);
+          setIsProcessing(false);
         }
       };
 
       recorder.start();
       setTimeout(() => {
         if (recorder.state === 'recording') recorder.stop();
-      }, 6000);
+      }, 3000);
     } catch (e) {
       console.error('Microphone access error:', e);
       setIsListening(false);
@@ -600,7 +603,17 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
             {t('back')}
           </button>
 
-          {!hasSpeech && (
+          {useGroq ? (
+            <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800">
+              <span className="text-lg leading-none">✅</span>
+              <span>{t('groqBadge')}</span>
+            </div>
+          ) : hasSpeech ? (
+            <div className="mb-4 flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
+              <span className="text-lg leading-none">🎤</span>
+              <span>{t('browserSpeechBadge')}</span>
+            </div>
+          ) : (
             <div className="mb-4 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
               <span className="text-lg leading-none">⚠️</span>
               <span>{t('noBrowserWarning')}</span>
@@ -755,13 +768,21 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
                   <p className="text-lg md:text-xl text-yellow-400 animate-pulse font-bold">{t('whoPressesFirst')}</p>
                 ) : currentWordInfo.is_manual_input ? (
                   <p className="text-lg md:text-xl text-slate-300">{t('answerWithText')}</p>
+                ) : isProcessing ? (
+                  <div className="flex items-center space-x-3 text-yellow-400">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span className="text-lg md:text-xl font-semibold">{t('processingLabel')}</span>
+                  </div>
                 ) : isListening ? (
-                  <div className="flex items-center space-x-3 text-indigo-400">
+                  <div className="flex items-center space-x-3 text-red-400">
                     <span className="relative flex h-4 w-4">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-4 w-4 bg-indigo-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
                     </span>
-                    <span className="text-lg md:text-xl font-semibold">{mode === 'team' ? t('teamListening', { team: answeringTeam === 'team1' ? team1Name : team2Name }) : t('listeningMode')}</span>
+                    <span className="text-lg md:text-xl font-semibold">{useGroq ? t('recordingLabel') : (mode === 'team' ? t('teamListening', { team: answeringTeam === 'team1' ? team1Name : team2Name }) : t('listeningMode'))}</span>
                   </div>
                 ) : (
                   <p className="text-lg md:text-xl text-slate-300">{
@@ -846,17 +867,27 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
 
             {!currentWordInfo.is_manual_input && hasSpeech && (
               <button
-                onClick={toggleListening}
-                title={isAutoListen ? t('stopListeningTitle') : t('startListeningTitle')}
+                onClick={isProcessing ? undefined : toggleListening}
+                disabled={isProcessing}
+                title={isProcessing ? 'Иштетилүүдө...' : isAutoListen ? t('stopListeningTitle') : t('startListeningTitle')}
                 className={`w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center shadow-2xl transition-all ${
-                  isListening || isAutoListen ? 'bg-red-500 animate-[pulse_1.5s_ease-in-out_infinite] scale-110 shadow-red-500/50' : (mode === 'team' ? (answeringTeam === 'team2' ? 'bg-pink-600 hover:bg-pink-500 shadow-pink-600/50' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/50') : 'bg-indigo-600 hover:bg-indigo-500 hover:scale-105 shadow-indigo-600/50')
+                  isProcessing ? 'bg-yellow-600 scale-105 shadow-yellow-600/50 cursor-not-allowed' :
+                  isListening || isAutoListen ? 'bg-red-500 animate-[pulse_1.5s_ease-in-out_infinite] scale-110 shadow-red-500/50' :
+                  (mode === 'team' ? (answeringTeam === 'team2' ? 'bg-pink-600 hover:bg-pink-500 shadow-pink-600/50' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/50') : 'bg-indigo-600 hover:bg-indigo-500 hover:scale-105 shadow-indigo-600/50')
                 }`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
+                {isProcessing ? (
+                  <svg className="animate-spin h-16 w-16 text-white mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                )}
                 <span className="text-white/80 text-xs font-medium uppercase tracking-widest">
-                  {isListening && useGroq ? '⏺ REC' : isAutoListen ? t('stopBtn') : t('speakBtn')}
+                  {isProcessing ? '...' : isListening && useGroq ? '⏺ REC' : isAutoListen ? t('stopBtn') : t('speakBtn')}
                 </span>
               </button>
             )}
@@ -908,7 +939,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
             </div>
             <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center">
               <p className="text-indigo-400 text-3xl font-black">{accuracy}%</p>
-              <p className="text-slate-400 text-xs mt-1 font-medium">Тактык</p>
+              <p className="text-slate-400 text-xs mt-1 font-medium">{t('accuracyLabel')}</p>
             </div>
             <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center">
               <p className="text-yellow-400 text-3xl font-black">{score}</p>
@@ -920,12 +951,12 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
             <div className="bg-blue-900/40 border border-blue-500/30 rounded-2xl p-5 text-center">
               <p className="text-blue-300 font-bold truncate mb-2">{team1Name}</p>
               <p className="text-4xl font-black text-white">{team1Score}</p>
-              <p className="text-slate-400 text-xs mt-1">Ката: {team1Mistakes}</p>
+              <p className="text-slate-400 text-xs mt-1">{t('mistakes', { count: team1Mistakes })}</p>
             </div>
             <div className="bg-pink-900/40 border border-pink-500/30 rounded-2xl p-5 text-center">
               <p className="text-pink-300 font-bold truncate mb-2">{team2Name}</p>
               <p className="text-4xl font-black text-white">{team2Score}</p>
-              <p className="text-slate-400 text-xs mt-1">Ката: {team2Mistakes}</p>
+              <p className="text-slate-400 text-xs mt-1">{t('mistakes', { count: team2Mistakes })}</p>
             </div>
           </div>
         )}
@@ -934,7 +965,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         {gameHistory.length > 0 && (
           <div className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-700 font-bold text-slate-300 text-sm">
-              Сөздөрдүн жыйынтыгы
+              {t('wordResultsTitle')}
             </div>
             <ul className="divide-y divide-slate-700/60 max-h-72 overflow-y-auto">
               {gameHistory.map((item, i) => (
@@ -949,7 +980,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
                     </div>
                   </div>
                   {item.mistakes_made > 0 && (
-                    <span className="text-xs text-red-400 flex-shrink-0">Ката: {item.mistakes_made}</span>
+                    <span className="text-xs text-red-400 flex-shrink-0">{t('mistakes', { count: item.mistakes_made })}</span>
                   )}
                 </li>
               ))}

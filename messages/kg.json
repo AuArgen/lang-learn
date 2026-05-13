@@ -8,7 +8,6 @@
     "heroTitle2": "үйрөнүңүз!",
     "heroDesc": "BilimAi Learn Lang — мугалимдер сөздүк темалар жаратат, окуучулар болсо үн менен оюн ойноп жаңы тилди өздөштүрөт. Реестрсиз ойноо мүмкүн!",
     "heroBtnTeacher": "Мугалиммин — Тема жасайм",
-    "heroBtnPlay": "Оюн ойнойм →",
     "heroBtnCabinet": "Кабинетке кирүү →",
     "howTitle": "Кантип иштейт?",
     "howStep1Num": "1",
@@ -64,7 +63,6 @@
     "themes": "Менин темаларым",
     "home": "Бардык оюндар (Home)",
     "admin": "Админ Панель",
-    "profile": "Профиль",
     "notAuthorized": "Авторизациядан өткөн жок"
   },
   "LocaleSwitcher": {
@@ -215,12 +213,8 @@
     "draw": "🤝 ТЕҢ ЧЫГУУ!",
     "totalScore": "Жалпы Упай",
     "correctWords": "Туура сөздөр",
-    "time": "Убакыт",
-    "sec": "{sec} сек",
-    "totalTimeTaken": "Жалпы кеткен убакыт:",
     "playAgainBtn": "Кайра ойноо 🔄",
     "toHomeBtn": "Башкы бетке",
-    "writePlaceholderSolo": "Котормосун жазыңыз...",
     "writePlaceholderTeam": "{team}, жазыңыз...",
     "checkBtn": "Текшерүү",
     "noWordsInTheme": "Бул темада сөз жок",
@@ -228,9 +222,13 @@
     "noBrowserWarning": "Браузериңиз микрофонду колдобойт. Текст менен жооп бериңиз же Google Chrome колдонуңуз.",
     "correctAnswerWas": "Туура жооп: \"{word}\"",
     "typeAnswerPlaceholder": "Сөздү жазыңыз...",
-    "livesLabel": "Жан",
-    "gameOverLives": "Жандар түгөндү! Оюн аяктады.",
-    "streakLabel": "🔥 {n}"
+    "streakLabel": "🔥 {n}",
+    "accuracyLabel": "Тактык",
+    "wordResultsTitle": "Сөздөрдүн жыйынтыгы",
+    "recordingLabel": "Жаздырылууда... (токтотуу үчүн басыңыз)",
+    "processingLabel": "Иштетилүүдө...",
+    "groqBadge": "Groq Whisper — сүйлөп жооп бер (3 сек жаздыруу)",
+    "browserSpeechBadge": "Браузердик таанытуу — Chrome/Android гана"
   },
   "LocalPlay": {
     "title": "Менин сөздүгүм",

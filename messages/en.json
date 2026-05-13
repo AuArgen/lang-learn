@@ -8,7 +8,6 @@
     "heroTitle2": "through games!",
     "heroDesc": "BilimAi Learn Lang — teachers build vocabulary themes, students play voice games to learn a new language. No registration needed to play!",
     "heroBtnTeacher": "I'm a teacher — create theme",
-    "heroBtnPlay": "Play now →",
     "heroBtnCabinet": "Go to dashboard →",
     "howTitle": "How does it work?",
     "howStep1Num": "1",
@@ -64,7 +63,6 @@
     "themes": "My Themes",
     "home": "All Games (Home)",
     "admin": "Admin Panel",
-    "profile": "Profile",
     "notAuthorized": "Not authorized"
   },
   "LocaleSwitcher": {
@@ -215,12 +213,8 @@
     "draw": "🤝 DRAW!",
     "totalScore": "Total Score",
     "correctWords": "Correct words",
-    "time": "Time",
-    "sec": "{sec} sec",
-    "totalTimeTaken": "Total time taken:",
     "playAgainBtn": "Play Again 🔄",
     "toHomeBtn": "Home Page",
-    "writePlaceholderSolo": "Write translation...",
     "writePlaceholderTeam": "{team}, write...",
     "checkBtn": "Check",
     "noWordsInTheme": "There are no words in this theme",
@@ -228,9 +222,13 @@
     "noBrowserWarning": "Your browser doesn't support the microphone. Type your answers or use Google Chrome.",
     "correctAnswerWas": "Correct answer: \"{word}\"",
     "typeAnswerPlaceholder": "Type the word...",
-    "livesLabel": "Lives",
-    "gameOverLives": "No lives left! Game over.",
-    "streakLabel": "🔥 {n}"
+    "streakLabel": "🔥 {n}",
+    "accuracyLabel": "Accuracy",
+    "wordResultsTitle": "Word Results",
+    "recordingLabel": "Recording... (tap to stop)",
+    "processingLabel": "Processing...",
+    "groqBadge": "Groq Whisper — speak up (3 sec recording)",
+    "browserSpeechBadge": "Browser speech — Chrome/Android only"
   },
   "LocalPlay": {
     "title": "My Vocabulary",
