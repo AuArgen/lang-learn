@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
     groqForm.append('model', 'whisper-large-v3-turbo');
     groqForm.append('language', lang.split('-')[0]);
     groqForm.append('response_format', 'json');
+    groqForm.append('temperature', '0');
+    if (referenceText) groqForm.append('prompt', referenceText);
 
     const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
