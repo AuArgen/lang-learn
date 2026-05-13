@@ -181,6 +181,7 @@
     "errorWritten": "Error: You wrote \"{transcript}\". Try again.",
     "errorWrittenSkip": "You made 3 written mistakes. Moving to the next word.",
     "correctFeedback": "Correct! 🎉",
+    "youSaid": "You said: \"{said}\"",
     "ttsNotSupported": "Your browser does not support text-to-speech.",
     "back": "Back",
     "modeSolo": "Solo game",

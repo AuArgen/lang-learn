@@ -92,6 +92,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   const [streak, setStreak] = useState(0);
   const [pronunciationScore, setPronunciationScore] = useState<number | null>(null);
   const [hasAssessment, setHasAssessment] = useState(false);
+  const [lastCorrectAnswer, setLastCorrectAnswer] = useState<{ word: string; said: string } | null>(null);
   const MAX_HEARTS = 5;
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -441,6 +442,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       setManualInputText('');
       setWordMistakes(0);
       setCurrentWordInputs([]);
+      setLastCorrectAnswer(null);
       if (currentWordIndex + 1 < gameWords.length) {
         setCurrentWordIndex(prev => prev + 1);
       } else {
@@ -467,13 +469,14 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       playSound('correct');
       setStreak(s => s + 1);
       setFeedbackMsg(t('correctFeedback'));
+      setLastCorrectAnswer({ word: currentWord, said: transcript });
       if (mode === 'team') {
         if (answeringTeam === 'team1') setTeam1Score(s => s + 10);
         else if (answeringTeam === 'team2') setTeam2Score(s => s + 10);
       } else {
         setScore(s => s + 10);
       }
-      setTimeout(() => triggerNextWord(true), 1000);
+      setTimeout(() => triggerNextWord(true), 1500);
     } else {
       playSound('error');
       setStreak(0);
@@ -518,13 +521,14 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       playSound('correct');
       setStreak(s => s + 1);
       setFeedbackMsg(t('correctFeedback'));
+      setLastCorrectAnswer({ word: currentWord, said: transcript });
       if (mode === 'team') {
         if (answeringTeam === 'team1') setTeam1Score(s => s + 10);
         else if (answeringTeam === 'team2') setTeam2Score(s => s + 10);
       } else {
         setScore(s => s + 10);
       }
-      setTimeout(() => triggerNextWord(true), 1000);
+      setTimeout(() => triggerNextWord(true), 1500);
     } else {
       playSound('error');
       setStreak(0);
@@ -845,6 +849,14 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
             {feedbackMsg && (
               <div className={`px-5 py-3 rounded-2xl font-bold text-base animate-in zoom-in text-center max-w-sm ${feedbackMsg.includes(t('correctFeedback').replace(' 🎉', '')) ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
                 {feedbackMsg}
+              </div>
+            )}
+            {lastCorrectAnswer && (
+              <div className="flex flex-col items-center gap-1 animate-in fade-in">
+                <span className="text-3xl font-black text-white tracking-wide">{lastCorrectAnswer.word}</span>
+                {lastCorrectAnswer.said.toLowerCase().trim() !== lastCorrectAnswer.word.toLowerCase().trim() && (
+                  <span className="text-sm text-slate-400">{t('youSaid', { said: lastCorrectAnswer.said })}</span>
+                )}
               </div>
             )}
             {pronunciationScore !== null && (
