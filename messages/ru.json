@@ -228,7 +228,9 @@
     "recordingLabel": "Запись... (нажмите чтобы остановить)",
     "processingLabel": "Обрабатывается...",
     "groqBadge": "Groq Whisper — говорите (3 сек записи)",
-    "browserSpeechBadge": "Браузерное распознавание — только Chrome/Android"
+    "browserSpeechBadge": "Браузерное распознавание — только Chrome/Android",
+    "azureAssessmentBadge": "Azure AI — оценка произношения включена",
+    "pronunciationScore": "Произношение: {score}/100"
   },
   "LocalPlay": {
     "title": "Мой словарь",

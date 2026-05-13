@@ -89,6 +89,8 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   const [useGroq, setUseGroq] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [pronunciationScore, setPronunciationScore] = useState<number | null>(null);
+  const [hasAssessment, setHasAssessment] = useState(false);
   const MAX_HEARTS = 5;
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -152,12 +154,15 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       setHasSpeech(!!SR);
     }
-    fetch('/api/transcribe')
+    fetch('/api/assess-pronunciation')
       .then(r => r.json())
       .then(d => {
         if (d.available) {
           setUseGroq(true);
           setHasSpeech(true);
+        }
+        if (d.hasAssessment) {
+          setHasAssessment(true);
         }
       })
       .catch(() => {});
@@ -323,17 +328,19 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         const form = new FormData();
         form.append('audio', blob, `recording.${ext}`);
         form.append('lang', getSpeechLangCode(themeLangCode));
+        form.append('referenceText', gameWords[currentWordIndex]?.word ?? '');
 
         try {
-          const res = await fetch('/api/transcribe', { method: 'POST', body: form });
+          const res = await fetch('/api/assess-pronunciation', { method: 'POST', body: form });
           const data = await res.json();
           if (data.text) {
+            setPronunciationScore(data.score ?? null);
             handleSpeechResult(data.text.toLowerCase().trim());
           } else {
-            console.error('Groq error:', data.status, data.detail || data.error);
+            console.error('Assessment error:', data.error);
           }
         } catch (e) {
-          console.error('Groq transcription failed:', e);
+          console.error('Assessment failed:', e);
         } finally {
           setIsProcessing(false);
         }
@@ -415,10 +422,12 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         isCorrect,
         mistakes_made: wordMistakes,
         inputs: currentWordInputs,
-        answeredBy: answeringTeam
+        answeredBy: answeringTeam,
+        pronScore: pronunciationScore,
       }];
       setGameHistory(newHistory);
     }
+    setPronunciationScore(null);
     
     if (isListening && recognitionRef.current) {
         recognitionRef.current.stop();
@@ -603,7 +612,12 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
             {t('back')}
           </button>
 
-          {useGroq ? (
+          {hasAssessment ? (
+            <div className="mb-4 flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 text-sm text-purple-800">
+              <span className="text-lg leading-none">🌟</span>
+              <span>{t('azureAssessmentBadge')}</span>
+            </div>
+          ) : useGroq ? (
             <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800">
               <span className="text-lg leading-none">✅</span>
               <span>{t('groqBadge')}</span>
@@ -826,10 +840,19 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
           )}
 
           {/* Feedback Msg */}
-          <div className="min-h-[4rem] mt-4 w-full flex items-center justify-center px-4">
+          <div className="min-h-[4rem] mt-4 w-full flex flex-col items-center justify-center gap-2 px-4">
             {feedbackMsg && (
               <div className={`px-5 py-3 rounded-2xl font-bold text-base animate-in zoom-in text-center max-w-sm ${feedbackMsg.includes(t('correctFeedback').replace(' 🎉', '')) ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
                 {feedbackMsg}
+              </div>
+            )}
+            {pronunciationScore !== null && (
+              <div className={`text-sm font-bold px-3 py-1 rounded-full ${
+                pronunciationScore >= 80 ? 'bg-green-500/20 text-green-300' :
+                pronunciationScore >= 60 ? 'bg-yellow-500/20 text-yellow-300' :
+                'bg-red-500/20 text-red-300'
+              }`}>
+                {pronunciationScore >= 80 ? '🟢' : pronunciationScore >= 60 ? '🟡' : '🔴'} {t('pronunciationScore', { score: pronunciationScore })}
               </div>
             )}
           </div>
@@ -979,9 +1002,16 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
                       <p className="text-slate-400 text-xs truncate">{item.translation}</p>
                     </div>
                   </div>
-                  {item.mistakes_made > 0 && (
-                    <span className="text-xs text-red-400 flex-shrink-0">{t('mistakes', { count: item.mistakes_made })}</span>
-                  )}
+                  <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                    {item.pronScore != null && (
+                      <span className={`text-xs font-bold ${item.pronScore >= 80 ? 'text-green-400' : item.pronScore >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        {item.pronScore}/100
+                      </span>
+                    )}
+                    {item.mistakes_made > 0 && (
+                      <span className="text-xs text-red-400">{t('mistakes', { count: item.mistakes_made })}</span>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

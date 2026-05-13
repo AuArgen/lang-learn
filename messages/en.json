@@ -228,7 +228,9 @@
     "recordingLabel": "Recording... (tap to stop)",
     "processingLabel": "Processing...",
     "groqBadge": "Groq Whisper — speak up (3 sec recording)",
-    "browserSpeechBadge": "Browser speech — Chrome/Android only"
+    "browserSpeechBadge": "Browser speech — Chrome/Android only",
+    "azureAssessmentBadge": "Azure AI pronunciation assessment enabled",
+    "pronunciationScore": "Pronunciation: {score}/100"
   },
   "LocalPlay": {
     "title": "My Vocabulary",

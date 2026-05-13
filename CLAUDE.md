@@ -144,6 +144,8 @@ next.config.ts                # Next.js конфиг
 | `APP_URL` | Публичный URL приложения |
 | `DATABASE_URL` | (опционально) путь к SQLite |
 | `GROQ_API_KEY` | (опционально) Groq API ключ для Whisper распознавания — `app/api/transcribe/route.ts` |
+| `AZURE_SPEECH_KEY` | (опционально) Azure Cognitive Services ключ — оценка произношения |
+| `AZURE_SPEECH_REGION` | (опционально) Azure регион (например `eastus`) — нужен вместе с `AZURE_SPEECH_KEY` |
 
 ---
 

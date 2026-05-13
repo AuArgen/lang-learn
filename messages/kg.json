@@ -228,7 +228,9 @@
     "recordingLabel": "Жаздырылууда... (токтотуу үчүн басыңыз)",
     "processingLabel": "Иштетилүүдө...",
     "groqBadge": "Groq Whisper — сүйлөп жооп бер (3 сек жаздыруу)",
-    "browserSpeechBadge": "Браузердик таанытуу — Chrome/Android гана"
+    "browserSpeechBadge": "Браузердик таанытуу — Chrome/Android гана",
+    "azureAssessmentBadge": "Azure AI — айтылышты баалоо иштетилген",
+    "pronunciationScore": "Айтылыш: {score}/100"
   },
   "LocalPlay": {
     "title": "Менин сөздүгүм",
