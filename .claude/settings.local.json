@@ -4,7 +4,9 @@
       "Bash(npm install *)",
       "Bash(npx prisma *)",
       "Bash(node -e \"require\\('@google/genai'\\)\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(type .env.local)",
+      "Bash(type .env)"
     ]
   }
 }

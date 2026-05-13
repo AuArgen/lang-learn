@@ -216,7 +216,13 @@
     "writePlaceholderTeam": "{team}, write...",
     "checkBtn": "Check",
     "noWordsInTheme": "There are no words in this theme",
-    "needAtLeastOneWord": "There must be at least one word to start the game."
+    "needAtLeastOneWord": "There must be at least one word to start the game.",
+    "noBrowserWarning": "Your browser doesn't support the microphone. Type your answers or use Google Chrome.",
+    "correctAnswerWas": "Correct answer: \"{word}\"",
+    "typeAnswerPlaceholder": "Type the word...",
+    "livesLabel": "Lives",
+    "gameOverLives": "No lives left! Game over.",
+    "streakLabel": "🔥 {n}"
   },
   "LocalPlay": {
     "title": "My Vocabulary",

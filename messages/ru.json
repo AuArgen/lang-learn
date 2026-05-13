@@ -216,7 +216,13 @@
     "writePlaceholderTeam": "{team}, напишите...",
     "checkBtn": "Проверить",
     "noWordsInTheme": "В этой теме нет слов",
-    "needAtLeastOneWord": "Для начала игры необходимо хотя бы одно слово."
+    "needAtLeastOneWord": "Для начала игры необходимо хотя бы одно слово.",
+    "noBrowserWarning": "Ваш браузер не поддерживает микрофон. Введите слова текстом или используйте Google Chrome.",
+    "correctAnswerWas": "Правильный ответ: \"{word}\"",
+    "typeAnswerPlaceholder": "Введите слово...",
+    "livesLabel": "Жизни",
+    "gameOverLives": "Жизни кончились! Игра завершена.",
+    "streakLabel": "🔥 {n}"
   },
   "LocalPlay": {
     "title": "Мой словарь",

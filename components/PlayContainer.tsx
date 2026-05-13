@@ -29,6 +29,28 @@ const getSpeechLangCode = (code: string) => {
   return map[code] || 'en-US';
 };
 
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function isSpeechMatch(transcript: string, word: string): boolean {
+  if (!transcript || !word) return false;
+  if (transcript.includes(word) || word.includes(transcript)) return true;
+  const maxDist = Math.max(1, Math.floor(word.length * 0.25));
+  return levenshtein(transcript, word) <= maxDist;
+}
+
 const getLangSpeakLabel = (code: string) => {
   const map: Record<string, string> = {
     'en': 'Англисче айтыңыз!', 'ru': 'Орусча айтыңыз!', 'tr': 'Түркчө айтыңыз!',
@@ -62,7 +84,13 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   const [wordMistakes, setWordMistakes] = useState(0);
   const [gameHistory, setGameHistory] = useState<any[]>([]);
   const [currentWordInputs, setCurrentWordInputs] = useState<string[]>([]);
-  const [selectedTimeSec, setSelectedTimeSec] = useState(60); 
+  const [selectedTimeSec, setSelectedTimeSec] = useState(60);
+  const [hasSpeech, setHasSpeech] = useState(true);
+  const [useGroq, setUseGroq] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const MAX_HEARTS = 5;
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Score/Mistakes State
   const [score, setScore] = useState(0);
@@ -80,6 +108,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
+    if (useGroq) return;
     if (typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
@@ -87,10 +116,15 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         recognitionRef.current.lang = getSpeechLangCode(themeLangCode);
         recognitionRef.current.continuous = false;
         recognitionRef.current.interimResults = false;
+        recognitionRef.current.maxAlternatives = 5;
 
         recognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript.toLowerCase().trim();
-          handleSpeechResult(transcript);
+          const alternatives: string[] = Array.from(event.results[0])
+            .map((r: any) => r.transcript.toLowerCase().trim());
+          const currentWord = gameWords[currentWordIndex]?.word || '';
+          const normWord = normalizeText(currentWord);
+          const best = alternatives.find(alt => isSpeechMatch(normalizeText(alt), normWord));
+          handleSpeechResult(best ?? alternatives[0]);
         };
 
         recognitionRef.current.onerror = (event: any) => {
@@ -102,19 +136,35 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
           setIsListening(false);
         };
       } else {
-        alert(t('speechNotSupported'));
+        setHasSpeech(false);
       }
     }
-  }, [currentWordIndex, themeLangCode, stage, gameWords, turnState, answeringTeam, t]);
+  }, [useGroq, currentWordIndex, themeLangCode, stage, gameWords, turnState, answeringTeam, t]);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      setHasSpeech(!!SR);
+    }
+    fetch('/api/transcribe')
+      .then(r => r.json())
+      .then(d => {
+        if (d.available) {
+          setUseGroq(true);
+          setHasSpeech(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (useGroq) return;
     let tTimer: any;
     const currentWordInfo = gameWords[currentWordIndex];
     const canListen = mode === 'solo' || (mode === 'team' && turnState === 'answering');
-    
-    // Check if feedback contains success translation (to not auto listen again if correct)
+
     const isSuccess = feedbackMsg.includes(t('correctFeedback').replace(' 🎉', ''));
-    
+
     if (stage === 'playing' && currentWordInfo && !currentWordInfo.is_manual_input && isAutoListen && !isListening && !isSuccess && canListen) {
       tTimer = setTimeout(() => {
         if (!isListening && stage === 'playing') {
@@ -123,7 +173,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       }, 800);
     }
     return () => clearTimeout(tTimer);
-  }, [isListening, isAutoListen, stage, feedbackMsg, gameWords, currentWordIndex, mode, turnState, t]);
+  }, [useGroq, isListening, isAutoListen, stage, feedbackMsg, gameWords, currentWordIndex, mode, turnState, t]);
 
   useEffect(() => {
     let timer: any;
@@ -175,6 +225,12 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     return () => clearTimeout(timer);
   }, [stage, mode, turnState, nextWordCountdown, currentWordIndex, gameWords.length, gameHistory]);
 
+  useEffect(() => {
+    if (stage === 'playing' && mode === 'solo' && mistakes >= MAX_HEARTS) {
+      endGame(gameHistory);
+    }
+  }, [mistakes, stage, mode, gameHistory]);
+
   const startGame = async () => {
     if (mode === 'solo' && !playerName) return alert(t('enterNameAlert'));
     let gId: string | null = null;
@@ -208,6 +264,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     setManualInputText('');
     setGameHistory([]);
     setCurrentWordInputs([]);
+    setStreak(0);
   };
 
   const handleBuzz = (team: 'team1' | 'team2') => {
@@ -222,7 +279,69 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     }
   };
 
+  const stopGroqRecording = () => {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const startGroqListening = async () => {
+    if (isListening) return;
+    const currentWordInfo = gameWords[currentWordIndex];
+    if (currentWordInfo?.is_manual_input) return;
+
+    try {
+      setFeedbackMsg('');
+      setIsListening(true);
+      audioChunksRef.current = [];
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'].find(
+        m => MediaRecorder.isTypeSupported(m)
+      ) || '';
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
+        if (blob.size < 1000) { setIsListening(false); return; }
+
+        const form = new FormData();
+        form.append('audio', blob, 'recording.webm');
+        form.append('lang', getSpeechLangCode(themeLangCode));
+
+        try {
+          const res = await fetch('/api/transcribe', { method: 'POST', body: form });
+          const data = await res.json();
+          if (data.text) handleSpeechResult(data.text.toLowerCase().trim());
+        } catch (e) {
+          console.error('Groq transcription failed:', e);
+        } finally {
+          setIsListening(false);
+        }
+      };
+
+      recorder.start();
+      setTimeout(() => {
+        if (recorder.state === 'recording') recorder.stop();
+      }, 6000);
+    } catch (e) {
+      console.error('Microphone access error:', e);
+      setIsListening(false);
+    }
+  };
+
   const toggleListening = () => {
+    if (useGroq) {
+      if (isListening) stopGroqRecording();
+      else startGroqListening();
+      return;
+    }
     if (isListening) {
       if (recognitionRef.current) recognitionRef.current.stop();
       setIsAutoListen(false);
@@ -233,15 +352,16 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   };
 
   const startListening = () => {
+    if (useGroq) { startGroqListening(); return; }
     const currentWordInfo = gameWords[currentWordIndex];
-    if (currentWordInfo?.is_manual_input) return; // Do not listen if manual word
+    if (currentWordInfo?.is_manual_input) return;
     if (recognitionRef.current && !isListening) {
       setFeedbackMsg('');
       setIsListening(true);
       try {
         recognitionRef.current.start();
       } catch (err) {
-        // Handle case where it might already be started
+        // already started
       }
     }
   };
@@ -319,9 +439,10 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     
     const normTranscript = normalizeText(transcript);
     const normWord = normalizeText(currentWord);
-    
-    if (normTranscript.includes(normWord) || normWord.includes(normTranscript)) {
+
+    if (isSpeechMatch(normTranscript, normWord)) {
       playSound('correct');
+      setStreak(s => s + 1);
       setFeedbackMsg(t('correctFeedback'));
       if (mode === 'team') {
         if (answeringTeam === 'team1') setTeam1Score(s => s + 10);
@@ -332,13 +453,13 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       setTimeout(() => triggerNextWord(true), 1000);
     } else {
       playSound('error');
-      
-      let msg = t('errorSpoken', { transcript });
-      let willSkip = wordMistakes + 1 >= 3;
-      if (willSkip) {
-        msg = t('errorSkipMaxMistakes');
-      }
-      
+      setStreak(0);
+
+      const willSkip = wordMistakes + 1 >= 3;
+      const msg = willSkip
+        ? t('errorSkipMaxMistakes') + ' ' + t('correctAnswerWas', { word: currentWord })
+        : t('errorSpoken', { transcript });
+
       setFeedbackMsg(msg);
       if (mode === 'team') {
         if (answeringTeam === 'team1') setTeam1Mistakes(m => m + 1);
@@ -372,6 +493,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
 
     if (normTranscript === normWord || normTranscript.includes(normWord)) {
       playSound('correct');
+      setStreak(s => s + 1);
       setFeedbackMsg(t('correctFeedback'));
       if (mode === 'team') {
         if (answeringTeam === 'team1') setTeam1Score(s => s + 10);
@@ -382,12 +504,12 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       setTimeout(() => triggerNextWord(true), 1000);
     } else {
       playSound('error');
-      
-      let msg = t('errorWritten', { transcript });
-      let willSkip = wordMistakes + 1 >= 3;
-      if (willSkip) {
-        msg = t('errorWrittenSkip');
-      }
+      setStreak(0);
+
+      const willSkip = wordMistakes + 1 >= 3;
+      const msg = willSkip
+        ? t('errorWrittenSkip') + ' ' + t('correctAnswerWas', { word: currentWord })
+        : t('errorWritten', { transcript });
 
       setFeedbackMsg(msg);
       if (mode === 'team') {
@@ -468,6 +590,13 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
             {t('back')}
           </button>
 
+          {!hasSpeech && (
+            <div className="mb-4 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+              <span className="text-lg leading-none">⚠️</span>
+              <span>{t('noBrowserWarning')}</span>
+            </div>
+          )}
+
           <h1 className="text-3xl font-extrabold text-center text-slate-800 mb-2">{theme.title}</h1>
           <p className="text-center text-slate-500 mb-8">{theme.description}</p>
 
@@ -534,6 +663,14 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
 
     return (
       <div className="min-h-screen bg-slate-900 text-white flex flex-col justify-between p-4 md:p-10 font-sans relative overflow-hidden">
+        {/* Progress bar */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-slate-700 z-20">
+          <div
+            className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-500"
+            style={{ width: `${gameWords.length > 0 ? (currentWordIndex / gameWords.length) * 100 : 0}%` }}
+          />
+        </div>
+
         {mode === 'team' && turnState === 'next_countdown' && (
           <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex items-center justify-center flex-col">
             <h2 className="text-4xl text-slate-300 font-bold mb-8">{t('prepareNextWord')}</h2>
@@ -547,11 +684,18 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         <div className="flex justify-between items-center bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl mx-auto w-full max-w-5xl z-10">
           {mode === 'solo' ? (
             <>
-              <div className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{t('score', { score })}</div>
+              <div className="flex flex-col items-start gap-0.5">
+                <div className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{t('score', { score })}</div>
+                {streak >= 2 && <div className="text-xs font-bold text-yellow-400">{t('streakLabel', { n: streak })}</div>}
+              </div>
               <div className={`text-2xl font-black ${isTimerRed ? 'text-red-500 animate-pulse' : 'text-white'}`}>
                 {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
               </div>
-              <div className="text-xl font-bold text-red-400">{t('mistakes', { count: mistakes })}</div>
+              <div className="flex gap-0.5 text-lg">
+                {Array.from({ length: MAX_HEARTS }).map((_, i) => (
+                  <span key={i} className={i < MAX_HEARTS - mistakes ? 'text-red-500' : 'text-slate-600 opacity-40'}>❤</span>
+                ))}
+              </div>
             </>
           ) : (
             <>
@@ -629,17 +773,19 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
             </div>
           </div>
 
-          {currentWordInfo.is_manual_input && (mode === 'solo' || turnState === 'answering') && (
+          {(currentWordInfo.is_manual_input || !hasSpeech) && (mode === 'solo' || turnState === 'answering') && (
              <form onSubmit={handleManualSubmit} className="mt-8 w-full max-w-md flex flex-row items-center gap-2">
-               <input 
+               <input
                  type="text"
                  value={manualInputText}
                  onChange={e => setManualInputText(e.target.value)}
-                 placeholder={`${mode === 'team' ? t('writePlaceholderTeam', { team: answeringTeam === 'team1' ? team1Name : team2Name }) : t('writePlaceholderSolo')}`}
+                 placeholder={mode === 'team'
+                   ? t('writePlaceholderTeam', { team: answeringTeam === 'team1' ? team1Name : team2Name })
+                   : t('typeAnswerPlaceholder')}
                  className="flex-1 px-4 py-3 bg-white/10 text-white placeholder-slate-400 border border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none backdrop-blur-md font-medium text-lg"
                  autoFocus
                />
-               <button 
+               <button
                  type="submit"
                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95 text-lg"
                >
@@ -649,9 +795,9 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
           )}
 
           {/* Feedback Msg */}
-          <div className="h-16 mt-4 w-full flex items-center justify-center">
+          <div className="min-h-[4rem] mt-4 w-full flex items-center justify-center px-4">
             {feedbackMsg && (
-              <div className={`px-6 py-3 rounded-full font-bold text-lg animate-in zoom-in w-max ${feedbackMsg.includes('Туура') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+              <div className={`px-5 py-3 rounded-2xl font-bold text-base animate-in zoom-in text-center max-w-sm ${feedbackMsg.includes(t('correctFeedback').replace(' 🎉', '')) ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
                 {feedbackMsg}
               </div>
             )}
@@ -688,8 +834,8 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
               </svg>
             </button>
 
-            {!currentWordInfo.is_manual_input && (
-              <button 
+            {!currentWordInfo.is_manual_input && hasSpeech && (
+              <button
                 onClick={toggleListening}
                 title={isAutoListen ? t('stopListeningTitle') : t('startListeningTitle')}
                 className={`w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center shadow-2xl transition-all ${
@@ -699,7 +845,9 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
-                <span className="text-white/80 text-xs font-medium uppercase tracking-widest">{isAutoListen ? t('stopBtn') : t('speakBtn')}</span>
+                <span className="text-white/80 text-xs font-medium uppercase tracking-widest">
+                  {isListening && useGroq ? '⏺ REC' : isAutoListen ? t('stopBtn') : t('speakBtn')}
+                </span>
               </button>
             )}
 
@@ -730,51 +878,77 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     }
   }
 
+  const correctCount = mode === 'solo' ? score / 10 : Math.floor(Math.max(team1Score, team2Score) / 10);
+  const accuracy = gameHistory.length > 0 ? Math.round((gameHistory.filter(h => h.isCorrect).length / gameHistory.length) * 100) : 0;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-      <div className="max-w-2xl w-full bg-slate-800 p-10 rounded-3xl shadow-2xl border border-slate-700 text-center text-white">
-        <h2 className={`text-4xl md:text-5xl font-extrabold mb-8 ${finalWinColor}`}>{finalWinText}</h2>
-        
+    <div className="min-h-screen bg-slate-900 p-4 flex flex-col items-center justify-start pt-10">
+      <div className="max-w-2xl w-full space-y-5">
+        {/* Header */}
+        <div className="text-center">
+          <h2 className={`text-4xl md:text-5xl font-extrabold mb-2 ${finalWinColor}`}>{finalWinText}</h2>
+        </div>
+
+        {/* Stats row */}
         {mode === 'solo' ? (
-          <>
-            <div className="space-y-4 my-8">
-              <p className="text-xl text-slate-300">{t('totalScore')}</p>
-              <p className="text-6xl font-black text-white">{score}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center">
+              <p className="text-green-400 text-3xl font-black">{correctCount}</p>
+              <p className="text-slate-400 text-xs mt-1 font-medium">{t('correctWords')}</p>
             </div>
-            <div className="flex justify-between bg-slate-700/50 p-6 rounded-2xl mb-8">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">{t('correctWords')}</p>
-                <p className="text-3xl font-bold text-green-400">{score / 10}</p>
-              </div>
-              <div>
-                <p className="text-slate-400 text-sm mb-1">{t('time')}</p>
-                <p className="text-3xl font-bold text-blue-400">{t('sec', { sec: selectedTimeSec - timeLeft })}</p>
-              </div>
-              <div>
-                <p className="text-slate-400 text-sm mb-1">{t('mistakes', { count: '' }).replace(':', '').trim()}</p>
-                <p className="text-3xl font-bold text-red-400">{mistakes}</p>
-              </div>
+            <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center">
+              <p className="text-indigo-400 text-3xl font-black">{accuracy}%</p>
+              <p className="text-slate-400 text-xs mt-1 font-medium">Тактык</p>
             </div>
-          </>
+            <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 text-center">
+              <p className="text-yellow-400 text-3xl font-black">{score}</p>
+              <p className="text-slate-400 text-xs mt-1 font-medium">{t('totalScore')}</p>
+            </div>
+          </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-blue-900/40 p-6 rounded-2xl border border-blue-500/30">
-              <h3 className="text-xl font-bold text-blue-300 mb-4 truncate">{team1Name}</h3>
-              <p className="text-5xl font-black text-white mb-2">{team1Score}</p>
-              <p className="text-slate-400 text-sm">{t('mistakes', { count: '' }).replace(':', '').trim()}: <span className="text-red-400 font-bold">{team1Mistakes}</span></p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-blue-900/40 border border-blue-500/30 rounded-2xl p-5 text-center">
+              <p className="text-blue-300 font-bold truncate mb-2">{team1Name}</p>
+              <p className="text-4xl font-black text-white">{team1Score}</p>
+              <p className="text-slate-400 text-xs mt-1">Ката: {team1Mistakes}</p>
             </div>
-            <div className="bg-pink-900/40 p-6 rounded-2xl border border-pink-500/30">
-              <h3 className="text-xl font-bold text-pink-300 mb-4 truncate">{team2Name}</h3>
-              <p className="text-5xl font-black text-white mb-2">{team2Score}</p>
-              <p className="text-slate-400 text-sm">{t('mistakes', { count: '' }).replace(':', '').trim()}: <span className="text-red-400 font-bold">{team2Mistakes}</span></p>
-            </div>
-            <div className="col-span-2 mt-4 bg-slate-700/50 p-4 rounded-xl">
-               <p className="text-slate-400 text-sm">{t('totalTimeTaken')} <span className="text-white font-bold">{t('sec', { sec: selectedTimeSec - timeLeft })}</span></p>
+            <div className="bg-pink-900/40 border border-pink-500/30 rounded-2xl p-5 text-center">
+              <p className="text-pink-300 font-bold truncate mb-2">{team2Name}</p>
+              <p className="text-4xl font-black text-white">{team2Score}</p>
+              <p className="text-slate-400 text-xs mt-1">Ката: {team2Mistakes}</p>
             </div>
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        {/* Word review list */}
+        {gameHistory.length > 0 && (
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-700 font-bold text-slate-300 text-sm">
+              Сөздөрдүн жыйынтыгы
+            </div>
+            <ul className="divide-y divide-slate-700/60 max-h-72 overflow-y-auto">
+              {gameHistory.map((item, i) => (
+                <li key={i} className="flex items-center justify-between px-5 py-3 gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`text-lg flex-shrink-0 ${item.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                      {item.isCorrect ? '✓' : '✗'}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-bold text-white text-sm truncate">{item.word}</p>
+                      <p className="text-slate-400 text-xs truncate">{item.translation}</p>
+                    </div>
+                  </div>
+                  {item.mistakes_made > 0 && (
+                    <span className="text-xs text-red-400 flex-shrink-0">Ката: {item.mistakes_made}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pb-10">
           <button onClick={startGame} className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-black rounded-xl transition shadow-lg text-lg">
             {t('playAgainBtn')}
           </button>

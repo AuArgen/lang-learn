@@ -216,7 +216,13 @@
     "writePlaceholderTeam": "{team}, жазыңыз...",
     "checkBtn": "Текшерүү",
     "noWordsInTheme": "Бул темада сөз жок",
-    "needAtLeastOneWord": "Оюнду баштоо үчүн кеминде бир сөз болушу керек."
+    "needAtLeastOneWord": "Оюнду баштоо үчүн кеминде бир сөз болушу керек.",
+    "noBrowserWarning": "Браузериңиз микрофонду колдобойт. Текст менен жооп бериңиз же Google Chrome колдонуңуз.",
+    "correctAnswerWas": "Туура жооп: \"{word}\"",
+    "typeAnswerPlaceholder": "Сөздү жазыңыз...",
+    "livesLabel": "Жан",
+    "gameOverLives": "Жандар түгөндү! Оюн аяктады.",
+    "streakLabel": "🔥 {n}"
   },
   "LocalPlay": {
     "title": "Менин сөздүгүм",

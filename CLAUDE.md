@@ -132,6 +132,7 @@ next.config.ts                # Next.js конфиг
 | `AUTH_SERVICE_URL` | URL внешнего OAuth сервиса |
 | `APP_URL` | Публичный URL приложения |
 | `DATABASE_URL` | (опционально) путь к SQLite |
+| `GROQ_API_KEY` | (опционально) Groq API ключ для Whisper распознавания (`app/api/transcribe/`) |
 
 ---
 
