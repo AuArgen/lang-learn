@@ -21,6 +21,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     authUrl = authUrl.replace('http://localhost:3000', appUrl);
   }
 
+  return (
     <div className="flex flex-col min-h-screen bg-slate-50 pb-16 md:pb-0">
       {/* Top Header Navigation */}
       <header className="w-full bg-white border-b border-slate-200 px-4 md:px-8 py-3 flex items-center justify-between sticky top-0 z-50">
