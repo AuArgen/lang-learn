@@ -53,6 +53,68 @@ function isSpeechMatch(transcript: string, word: string): boolean {
 }
 
 const MIN_PRONUNCIATION_SCORE = 70;
+const ASSESSMENT_SAMPLE_RATE = 16000;
+
+function flattenAudioChunks(chunks: Float32Array[]) {
+  const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const samples = new Float32Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    samples.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return samples;
+}
+
+function resampleAudio(samples: Float32Array, sourceRate: number, targetRate: number) {
+  if (sourceRate === targetRate) return samples;
+  const ratio = sourceRate / targetRate;
+  const length = Math.round(samples.length / ratio);
+  const resampled = new Float32Array(length);
+
+  for (let i = 0; i < length; i++) {
+    const index = i * ratio;
+    const before = Math.floor(index);
+    const after = Math.min(before + 1, samples.length - 1);
+    const weight = index - before;
+    resampled[i] = samples[before] * (1 - weight) + samples[after] * weight;
+  }
+
+  return resampled;
+}
+
+function encodeWav(samples: Float32Array, sampleRate: number) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const writeString = (offset: number, value: string) => {
+    for (let i = 0; i < value.length; i++) {
+      view.setUint8(offset + i, value.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  let offset = 44;
+  for (const sample of samples) {
+    const clamped = Math.max(-1, Math.min(1, sample));
+    view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true);
+    offset += 2;
+  }
+
+  return new Blob([view], { type: 'audio/wav; codecs=audio/pcm; samplerate=16000' });
+}
 
 const getLangSpeakLabel = (code: string) => {
   const map: Record<string, string> = {
@@ -97,6 +159,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   const [lastCorrectAnswer, setLastCorrectAnswer] = useState<{ word: string; said: string } | null>(null);
   const MAX_HEARTS = 5;
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const wavStopRef = useRef<(() => void) | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
   // Score/Mistakes State
@@ -292,9 +355,84 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
   };
 
   const stopGroqRecording = () => {
+    if (wavStopRef.current) {
+      wavStopRef.current();
+      return;
+    }
     if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
+  };
+
+  const submitAssessmentAudio = async (blob: Blob, filename: string) => {
+    if (blob.size < 1000) {
+      handleSpeechResult('', true);
+      return;
+    }
+
+    setIsProcessing(true);
+    const form = new FormData();
+    form.append('audio', blob, filename);
+    form.append('lang', getSpeechLangCode(themeLangCode));
+    form.append('referenceText', gameWords[currentWordIndex]?.word ?? '');
+
+    try {
+      const res = await fetch('/api/assess-pronunciation', { method: 'POST', body: form });
+      const data = await res.json();
+      const transcript = typeof data.text === 'string' ? data.text.toLowerCase().trim() : '';
+      if (res.ok && transcript) {
+        const assessmentScore = data.accuracyScore ?? data.score ?? null;
+        setPronunciationScore(assessmentScore);
+        handleSpeechResult(
+          transcript,
+          assessmentScore !== null && assessmentScore < MIN_PRONUNCIATION_SCORE
+        );
+      } else {
+        console.warn('Assessment did not recognize speech:', data.error ?? res.status);
+        handleSpeechResult(transcript, true);
+      }
+    } catch (e) {
+      console.error('Assessment failed:', e);
+      handleSpeechResult('', true);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const startWavAssessmentRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const audioContext = new AudioContextClass();
+    const source = audioContext.createMediaStreamSource(stream);
+    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+    const chunks: Float32Array[] = [];
+    let stopped = false;
+
+    processor.onaudioprocess = (event: AudioProcessingEvent) => {
+      if (stopped) return;
+      chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+    };
+
+    source.connect(processor);
+    processor.connect(audioContext.destination);
+
+    const stop = async () => {
+      if (stopped) return;
+      stopped = true;
+      wavStopRef.current = null;
+      setIsListening(false);
+      processor.disconnect();
+      source.disconnect();
+      stream.getTracks().forEach(t => t.stop());
+
+      const samples = flattenAudioChunks(chunks);
+      const resampled = resampleAudio(samples, audioContext.sampleRate, ASSESSMENT_SAMPLE_RATE);
+      await audioContext.close();
+      await submitAssessmentAudio(encodeWav(resampled, ASSESSMENT_SAMPLE_RATE), 'recording.wav');
+    };
+
+    wavStopRef.current = stop;
+    window.setTimeout(stop, 3000);
   };
 
   const startGroqListening = async () => {
@@ -306,6 +444,11 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       setFeedbackMsg('');
       setIsListening(true);
       audioChunksRef.current = [];
+
+      if (hasAssessment) {
+        await startWavAssessmentRecording();
+        return;
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'].find(
@@ -322,35 +465,8 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         stream.getTracks().forEach(t => t.stop());
         setIsListening(false);
         const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
-        if (blob.size < 1000) { return; }
-
-        setIsProcessing(true);
         const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
-        const form = new FormData();
-        form.append('audio', blob, `recording.${ext}`);
-        form.append('lang', getSpeechLangCode(themeLangCode));
-        form.append('referenceText', gameWords[currentWordIndex]?.word ?? '');
-
-        try {
-          const res = await fetch('/api/assess-pronunciation', { method: 'POST', body: form });
-          const data = await res.json();
-          const transcript = typeof data.text === 'string' ? data.text.toLowerCase().trim() : '';
-          if (res.ok && transcript) {
-            const assessmentScore = data.accuracyScore ?? data.score ?? null;
-            setPronunciationScore(assessmentScore);
-            handleSpeechResult(
-              transcript,
-              assessmentScore !== null && assessmentScore < MIN_PRONUNCIATION_SCORE
-            );
-          } else {
-            console.warn('Assessment did not recognize speech:', data.error ?? res.status);
-            handleSpeechResult(transcript, true);
-          }
-        } catch (e) {
-          console.error('Assessment failed:', e);
-        } finally {
-          setIsProcessing(false);
-        }
+        await submitAssessmentAudio(blob, `recording.${ext}`);
       };
 
       recorder.start();
