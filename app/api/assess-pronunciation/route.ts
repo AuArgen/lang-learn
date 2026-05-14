@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
+const tokenizeAssessmentText = (text: string) =>
+  text.toLowerCase().normalize('NFKC').match(/[\p{L}\p{N}]+/gu) ?? [];
+
+const normalizeAssessmentText = (text: string) => tokenizeAssessmentText(text).join('');
+
+type AzureWordResult = {
+  Word?: string;
+  PronunciationAssessment?: {
+    AccuracyScore?: number;
+    ErrorType?: string;
+  };
+};
+
 export async function GET() {
   const groqAvailable = !!process.env.GROQ_API_KEY;
   const azureAvailable = !!(process.env.AZURE_SPEECH_KEY && process.env.AZURE_SPEECH_REGION);
@@ -30,6 +43,7 @@ export async function POST(req: NextRequest) {
         ReferenceText: referenceText,
         GradingSystem: 'HundredMark',
         Granularity: 'Word',
+        Dimension: 'Comprehensive',
         EnableMiscue: true,
       };
       const configBase64 = Buffer.from(JSON.stringify(assessConfig)).toString('base64');
@@ -52,6 +66,21 @@ export async function POST(req: NextRequest) {
         const data = await res.json();
         const nbest = data.NBest?.[0];
         const assessment = nbest?.PronunciationAssessment;
+        const words: AzureWordResult[] = Array.isArray(nbest?.Words) ? nbest.Words : [];
+        const referenceWords = tokenizeAssessmentText(referenceText);
+        const assessedReferenceWords = referenceWords.map((referenceWord) =>
+          words.find((word) => normalizeAssessmentText(word.Word ?? '') === referenceWord)
+        );
+        const missingReferenceWord = words.length > 0 && referenceWords.length > 0 && assessedReferenceWords.some((word) => !word);
+        const firstWordError = words.find((word) => {
+          const errorType = word.PronunciationAssessment?.ErrorType;
+          return errorType && errorType !== 'None';
+        })?.PronunciationAssessment?.ErrorType;
+        const referenceScores = assessedReferenceWords
+          .map((word) => word?.PronunciationAssessment?.AccuracyScore)
+          .filter((score): score is number => typeof score === 'number');
+        const wordAccuracyScore = referenceScores.length > 0 ? Math.round(Math.min(...referenceScores)) : null;
+        const wordErrorType = firstWordError ?? (missingReferenceWord ? 'MissingReferenceWord' : null);
         const text = (data.DisplayText ?? nbest?.Display ?? '').replace(/[.,!?]+$/, '').trim();
         if (!text) {
           return NextResponse.json({
@@ -59,12 +88,16 @@ export async function POST(req: NextRequest) {
             recognitionStatus: data.RecognitionStatus ?? null,
             score: assessment?.PronScore != null ? Math.round(assessment.PronScore) : null,
             accuracyScore: assessment?.AccuracyScore != null ? Math.round(assessment.AccuracyScore) : null,
+            wordAccuracyScore,
+            wordErrorType,
           });
         }
         return NextResponse.json({
           text,
           score: assessment?.PronScore != null ? Math.round(assessment.PronScore) : null,
           accuracyScore: assessment?.AccuracyScore != null ? Math.round(assessment.AccuracyScore) : null,
+          wordAccuracyScore,
+          wordErrorType,
         });
       }
       console.error('Azure Speech error:', res.status, await res.text());

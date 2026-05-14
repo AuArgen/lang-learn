@@ -21,6 +21,9 @@ const getSpeechLangCode = (code: string) => {
   return map[code] || 'en-US';
 };
 
+const normalizeSpeechText = (text: string) =>
+  text.toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, '');
+
 export default function WordsClient({
   theme,
   words,
@@ -157,8 +160,8 @@ export default function WordsClient({
     recognition.onresult = (e: any) => {
       const transcripts: string[] = Array.from(e.results[0]).map((r: any) => r.transcript.toLowerCase().trim());
       const transcript = transcripts[0] ?? '';
-      const target = targetWord.toLowerCase().trim();
-      const correct = transcript === target || (target.length >= 3 && transcript.includes(target));
+      const target = normalizeSpeechText(targetWord);
+      const correct = normalizeSpeechText(transcript) === target;
       setListeningWordId(null);
       setWordCheckResult({ id: wordId, correct, transcript });
       checkTimeoutRef.current = setTimeout(() => setWordCheckResult(null), 3000);

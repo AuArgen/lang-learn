@@ -29,27 +29,9 @@ const getSpeechLangCode = (code: string) => {
   return map[code] || 'en-US';
 };
 
-function levenshtein(a: string, b: string): number {
-  const m = a.length, n = b.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
-    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
-  );
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] = a[i - 1] === b[j - 1]
-        ? dp[i - 1][j - 1]
-        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-    }
-  }
-  return dp[m][n];
-}
-
 function isSpeechMatch(transcript: string, word: string): boolean {
   if (!transcript || !word) return false;
-  if (transcript === word) return true;
-  if (transcript.includes(word) && word.length >= 3) return true;
-  const maxDist = Math.max(1, Math.floor(word.length * 0.25));
-  return levenshtein(transcript, word) <= maxDist;
+  return transcript === word;
 }
 
 const MIN_PRONUNCIATION_SCORE = 70;
@@ -382,10 +364,13 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
       const transcript = typeof data.text === 'string' ? data.text.toLowerCase().trim() : '';
       if (res.ok && transcript) {
         const assessmentScore = data.accuracyScore ?? data.score ?? null;
+        const wordAccuracyScore = data.wordAccuracyScore ?? assessmentScore;
+        const wordErrorType = typeof data.wordErrorType === 'string' ? data.wordErrorType : null;
+        const hasWordError = wordErrorType !== null && wordErrorType !== 'None';
         setPronunciationScore(assessmentScore);
         handleSpeechResult(
           transcript,
-          assessmentScore !== null && assessmentScore < MIN_PRONUNCIATION_SCORE
+          hasWordError || (wordAccuracyScore !== null && wordAccuracyScore < MIN_PRONUNCIATION_SCORE)
         );
       } else {
         console.warn('Assessment did not recognize speech:', data.error ?? res.status);
@@ -638,7 +623,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     const normTranscript = normalizeText(transcript);
     const normWord = normalizeText(currentWord);
 
-    if (normTranscript === normWord || normTranscript.includes(normWord)) {
+    if (normTranscript === normWord) {
       playSound('correct');
       setStreak(s => s + 1);
       setFeedbackMsg(t('correctFeedback'));
