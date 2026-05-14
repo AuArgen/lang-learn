@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
         ReferenceText: referenceText,
         GradingSystem: 'HundredMark',
         Granularity: 'Word',
-        EnableMiscue: false,
+        EnableMiscue: true,
       };
       const configBase64 = Buffer.from(JSON.stringify(assessConfig)).toString('base64');
       const audioBuffer = Buffer.from(await audio.arrayBuffer());
@@ -78,7 +78,6 @@ export async function POST(req: NextRequest) {
     groqForm.append('language', lang.split('-')[0]);
     groqForm.append('response_format', 'json');
     groqForm.append('temperature', '0');
-    if (referenceText) groqForm.append('prompt', referenceText);
 
     const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',

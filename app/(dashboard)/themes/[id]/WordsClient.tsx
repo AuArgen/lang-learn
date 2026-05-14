@@ -156,10 +156,11 @@ export default function WordsClient({
 
     recognition.onresult = (e: any) => {
       const transcripts: string[] = Array.from(e.results[0]).map((r: any) => r.transcript.toLowerCase().trim());
+      const transcript = transcripts[0] ?? '';
       const target = targetWord.toLowerCase().trim();
-      const correct = transcripts.some(tr => tr === target || tr.includes(target) || target.includes(tr));
+      const correct = transcript === target || (target.length >= 3 && transcript.includes(target));
       setListeningWordId(null);
-      setWordCheckResult({ id: wordId, correct, transcript: transcripts[0] });
+      setWordCheckResult({ id: wordId, correct, transcript });
       checkTimeoutRef.current = setTimeout(() => setWordCheckResult(null), 3000);
     };
 

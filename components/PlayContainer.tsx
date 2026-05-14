@@ -52,6 +52,8 @@ function isSpeechMatch(transcript: string, word: string): boolean {
   return levenshtein(transcript, word) <= maxDist;
 }
 
+const MIN_PRONUNCIATION_SCORE = 70;
+
 const getLangSpeakLabel = (code: string) => {
   const map: Record<string, string> = {
     'en': 'Англисче айтыңыз!', 'ru': 'Орусча айтыңыз!', 'tr': 'Түркчө айтыңыз!',
@@ -126,10 +128,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         recognitionRef.current.onresult = (event: any) => {
           const alternatives: string[] = Array.from(event.results[0])
             .map((r: any) => r.transcript.toLowerCase().trim());
-          const currentWord = gameWords[currentWordIndex]?.word || '';
-          const normWord = normalizeText(currentWord);
-          const best = alternatives.find(alt => isSpeechMatch(normalizeText(alt), normWord));
-          handleSpeechResult(best ?? alternatives[0]);
+          handleSpeechResult(alternatives[0] ?? '');
         };
 
         recognitionRef.current.onerror = (event: any) => {
@@ -336,8 +335,12 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
           const res = await fetch('/api/assess-pronunciation', { method: 'POST', body: form });
           const data = await res.json();
           if (data.text) {
-            setPronunciationScore(data.score ?? null);
-            handleSpeechResult(data.text.toLowerCase().trim());
+            const assessmentScore = data.accuracyScore ?? data.score ?? null;
+            setPronunciationScore(assessmentScore);
+            handleSpeechResult(
+              data.text.toLowerCase().trim(),
+              assessmentScore !== null && assessmentScore < MIN_PRONUNCIATION_SCORE
+            );
           } else {
             console.error('Assessment error:', data.error);
           }
@@ -454,7 +457,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     }
   };
 
-  const handleSpeechResult = (transcript: string) => {
+  const handleSpeechResult = (transcript: string, forceIncorrect = false) => {
     if (stage !== 'playing' || !gameWords[currentWordIndex]) return;
     if (mode === 'team' && turnState !== 'answering') return;
     
@@ -465,7 +468,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     const normTranscript = normalizeText(transcript);
     const normWord = normalizeText(currentWord);
 
-    if (isSpeechMatch(normTranscript, normWord)) {
+    if (!forceIncorrect && isSpeechMatch(normTranscript, normWord)) {
       playSound('correct');
       setStreak(s => s + 1);
       setFeedbackMsg(t('correctFeedback'));
