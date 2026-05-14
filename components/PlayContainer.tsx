@@ -334,15 +334,17 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         try {
           const res = await fetch('/api/assess-pronunciation', { method: 'POST', body: form });
           const data = await res.json();
-          if (data.text) {
+          const transcript = typeof data.text === 'string' ? data.text.toLowerCase().trim() : '';
+          if (res.ok && transcript) {
             const assessmentScore = data.accuracyScore ?? data.score ?? null;
             setPronunciationScore(assessmentScore);
             handleSpeechResult(
-              data.text.toLowerCase().trim(),
+              transcript,
               assessmentScore !== null && assessmentScore < MIN_PRONUNCIATION_SCORE
             );
           } else {
-            console.error('Assessment error:', data.error);
+            console.warn('Assessment did not recognize speech:', data.error ?? res.status);
+            handleSpeechResult(transcript, true);
           }
         } catch (e) {
           console.error('Assessment failed:', e);

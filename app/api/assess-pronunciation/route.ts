@@ -53,6 +53,14 @@ export async function POST(req: NextRequest) {
         const nbest = data.NBest?.[0];
         const assessment = nbest?.PronunciationAssessment;
         const text = (data.DisplayText ?? nbest?.Display ?? '').replace(/[.,!?]+$/, '').trim();
+        if (!text) {
+          return NextResponse.json({
+            error: 'empty_transcript',
+            recognitionStatus: data.RecognitionStatus ?? null,
+            score: assessment?.PronScore != null ? Math.round(assessment.PronScore) : null,
+            accuracyScore: assessment?.AccuracyScore != null ? Math.round(assessment.AccuracyScore) : null,
+          });
+        }
         return NextResponse.json({
           text,
           score: assessment?.PronScore != null ? Math.round(assessment.PronScore) : null,
@@ -92,7 +100,11 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await res.json();
-    return NextResponse.json({ text: (data.text ?? '').trim(), score: null });
+    const text = (data.text ?? '').trim();
+    if (!text) {
+      return NextResponse.json({ error: 'empty_transcript', text: '', score: null });
+    }
+    return NextResponse.json({ text, score: null });
   } catch (e) {
     console.error('Assessment route error:', e);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
