@@ -15,6 +15,9 @@ type AzureWordResult = {
   };
 };
 
+const getAzureDisplayText = (data: any) =>
+  ((data.DisplayText ?? data.NBest?.[0]?.Display ?? '') as string).replace(/[.,!?]+$/, '').trim();
+
 export async function GET() {
   const groqAvailable = !!process.env.GROQ_API_KEY;
   const azureAvailable = !!(process.env.AZURE_SPEECH_KEY && process.env.AZURE_SPEECH_REGION);
@@ -64,6 +67,17 @@ export async function POST(req: NextRequest) {
 
       if (res.ok) {
         const data = await res.json();
+        const plainRes = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Ocp-Apim-Subscription-Key': azureKey,
+            'Content-Type': mimeType,
+            'Accept': 'application/json',
+          },
+          body: audioBuffer,
+        });
+        const plainText = plainRes.ok ? getAzureDisplayText(await plainRes.json()) : '';
+
         const nbest = data.NBest?.[0];
         const assessment = nbest?.PronunciationAssessment;
         const words: AzureWordResult[] = Array.isArray(nbest?.Words) ? nbest.Words : [];
@@ -81,11 +95,12 @@ export async function POST(req: NextRequest) {
           .filter((score): score is number => typeof score === 'number');
         const wordAccuracyScore = referenceScores.length > 0 ? Math.round(Math.min(...referenceScores)) : null;
         const wordErrorType = firstWordError ?? (missingReferenceWord ? 'MissingReferenceWord' : null);
-        const text = (data.DisplayText ?? nbest?.Display ?? '').replace(/[.,!?]+$/, '').trim();
+        const text = plainText;
         if (!text) {
           return NextResponse.json({
             error: 'empty_transcript',
             recognitionStatus: data.RecognitionStatus ?? null,
+            assessmentText: getAzureDisplayText(data),
             score: assessment?.PronScore != null ? Math.round(assessment.PronScore) : null,
             accuracyScore: assessment?.AccuracyScore != null ? Math.round(assessment.AccuracyScore) : null,
             wordAccuracyScore,
@@ -94,6 +109,7 @@ export async function POST(req: NextRequest) {
         }
         return NextResponse.json({
           text,
+          assessmentText: getAzureDisplayText(data),
           score: assessment?.PronScore != null ? Math.round(assessment.PronScore) : null,
           accuracyScore: assessment?.AccuracyScore != null ? Math.round(assessment.AccuracyScore) : null,
           wordAccuracyScore,

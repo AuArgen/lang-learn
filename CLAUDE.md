@@ -179,8 +179,10 @@ npx prisma db push # Применить изменения схемы
 ### Алгоритм сравнения ответа
 
 `isSpeechMatch(transcript, word)` — используется и для голоса, и при выборе лучшей альтернативы:
-- `transcript.includes(word) || word.includes(transcript)` — точное/частичное вхождение
-- Levenshtein distance ≤ `max(1, ceil(word.length × 0.25))` — нечёткое совпадение
+- `transcript.includes(word)` — точное слово внутри распознанной фразы
+- `word.includes(transcript)` допускается только если сказано ≥ 80% слова
+- Levenshtein distance ≤ `max(1, floor(word.length × 0.2))` — нечёткое совпадение
+- Для Azure используется независимое распознавание без `referenceText`, чтобы `referenceText` не подменял сказанное слово
 
 ### UX-механики (solo режим)
 

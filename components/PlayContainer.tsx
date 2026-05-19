@@ -106,13 +106,17 @@ function isSpeechMatch(transcript: string, word: string): boolean {
   if (transcript === word) return true;
 
   const shorterLength = Math.min(transcript.length, word.length);
-  if (shorterLength >= 3 && (transcript.includes(word) || word.includes(transcript))) {
+  if (shorterLength >= 3 && transcript.includes(word)) {
+    return true;
+  }
+
+  if (word.includes(transcript) && transcript.length >= Math.ceil(word.length * 0.8)) {
     return true;
   }
 
   if (word.length < 4) return false;
 
-  const maxDistance = Math.max(1, Math.ceil(word.length * 0.25));
+  const maxDistance = Math.max(1, Math.floor(word.length * 0.2));
   return levenshteinDistance(transcript, word) <= maxDistance;
 }
 
