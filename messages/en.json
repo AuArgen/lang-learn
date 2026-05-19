@@ -177,6 +177,7 @@
     "team1Default": "Team 1",
     "team2Default": "Team 2",
     "errorSpoken": "Error: You said \"{transcript}\". Try again.",
+    "speechNotRecognized": "I could not hear that clearly. Say the word again.",
     "errorSkipMaxMistakes": "You made 3 mistakes. Moving to the next word.",
     "errorWritten": "Error: You wrote \"{transcript}\". Try again.",
     "errorWrittenSkip": "You made 3 written mistakes. Moving to the next word.",

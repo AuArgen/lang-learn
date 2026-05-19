@@ -58,7 +58,7 @@ app/
   api/
     auth/callback/            # OAuth callback
     auth/logout/
-    transcribe/route.ts       # POST: Groq Whisper транскрипция аудио; GET: { available: bool }
+    assess-pronunciation/route.ts # POST: Azure/Groq проверка речи; GET: { available, hasAssessment }
   play/
     [themeId]/page.tsx        # Игровой экран (публичный, без авторизации)
     local/page.tsx            # Игра без сохранения (браузерный localStorage)
@@ -121,7 +121,7 @@ next.config.ts                # Next.js конфиг
 - Middleware (`middleware.ts`) верифицирует токен и добавляет заголовки `x-user-id`, `x-user-role`
 - Получение пользователя на сервере: `getServerUser()` из `lib/auth/server-auth.ts`
 - Внешний OAuth: `AUTH_SERVICE_URL` (env)
-- Публичные пути: `/`, `/api/auth/callback`, `/play/`, `/api/transcribe`
+- Публичные пути: `/`, `/api/auth/callback`, `/play/`, `/api/assess-pronunciation`
 
 ---
 
@@ -143,7 +143,7 @@ next.config.ts                # Next.js конфиг
 | `AUTH_SERVICE_URL` | URL внешнего OAuth сервиса |
 | `APP_URL` | Публичный URL приложения |
 | `DATABASE_URL` | (опционально) путь к SQLite |
-| `GROQ_API_KEY` | (опционально) Groq API ключ для Whisper распознавания — `app/api/transcribe/route.ts` |
+| `GROQ_API_KEY` | (опционально) Groq API ключ для Whisper распознавания — fallback в `app/api/assess-pronunciation/route.ts` |
 | `AZURE_SPEECH_KEY` | (опционально) Azure Cognitive Services ключ — оценка произношения |
 | `AZURE_SPEECH_REGION` | (опционально) Azure регион (например `eastus`) — нужен вместе с `AZURE_SPEECH_KEY` |
 
@@ -163,23 +163,24 @@ npx prisma db push # Применить изменения схемы
 
 ## Игра (PlayContainer.tsx)
 
-### Распознавание речи — три уровня (автоматическое переключение)
+### Распознавание речи — четыре уровня (автоматическое переключение)
 
-1. **Groq Whisper** (если `GROQ_API_KEY` задан) — лучшее качество, работает во всех браузерах.
-   - Клиент записывает аудио через `MediaRecorder`
-   - Отправляет на `POST /api/transcribe`
-   - Сервер передаёт в Groq `whisper-large-v3-turbo`
-   - Кнопка микрофона показывает "⏺ REC" во время записи
+1. **Azure Pronunciation Assessment** (если `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION` заданы) — основной режим проверки произношения.
+   - Клиент записывает WAV 16 kHz и отправляет на `POST /api/assess-pronunciation`
+   - Сервер передаёт `referenceText`, возвращает transcript + score
+   - Пустое распознавание не считается ошибкой: ученик повторяет слово
 
-2. **Web Speech API** (Chrome/Android, без ключа) — берёт `maxAlternatives = 5` и проверяет все варианты.
+2. **Groq Whisper** (если `GROQ_API_KEY` задан, а Azure нет) — fallback распознавания через `whisper-large-v3-turbo`, работает во всех браузерах.
 
-3. **Текстовый ввод** — если браузер не поддерживает Speech API (iOS Safari, Firefox), показывается поле ввода для всех слов.
+3. **Web Speech API** (Chrome/Android, без ключей) — берёт `maxAlternatives = 5` и проверяет все варианты.
+
+4. **Текстовый ввод** — если браузер не поддерживает Speech API (iOS Safari, Firefox), показывается поле ввода для всех слов.
 
 ### Алгоритм сравнения ответа
 
 `isSpeechMatch(transcript, word)` — используется и для голоса, и при выборе лучшей альтернативы:
 - `transcript.includes(word) || word.includes(transcript)` — точное/частичное вхождение
-- Levenshtein distance ≤ `max(1, floor(word.length × 0.25))` — нечёткое совпадение
+- Levenshtein distance ≤ `max(1, ceil(word.length × 0.25))` — нечёткое совпадение
 
 ### UX-механики (solo режим)
 

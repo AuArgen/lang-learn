@@ -29,9 +29,91 @@ const getSpeechLangCode = (code: string) => {
   return map[code] || 'en-US';
 };
 
+const ENGLISH_CONTRACTIONS: Record<string, string> = {
+  "what's": 'what is',
+  "it's": 'it is',
+  "he's": 'he is',
+  "she's": 'she is',
+  "that's": 'that is',
+  "who's": 'who is',
+  "where's": 'where is',
+  "how's": 'how is',
+  "there's": 'there is',
+  "let's": 'let us',
+  "i'm": 'i am',
+  "you're": 'you are',
+  "we're": 'we are',
+  "they're": 'they are',
+  "i've": 'i have',
+  "you've": 'you have',
+  "we've": 'we have',
+  "they've": 'they have',
+  "i'll": 'i will',
+  "you'll": 'you will',
+  "he'll": 'he will',
+  "she'll": 'she will',
+  "we'll": 'we will',
+  "they'll": 'they will',
+  "isn't": 'is not',
+  "aren't": 'are not',
+  "wasn't": 'was not',
+  "weren't": 'were not',
+  "haven't": 'have not',
+  "hasn't": 'has not',
+  "hadn't": 'had not',
+  "won't": 'will not',
+  "wouldn't": 'would not',
+  "don't": 'do not',
+  "doesn't": 'does not',
+  "didn't": 'did not',
+  "can't": 'cannot',
+  "couldn't": 'could not',
+  "shouldn't": 'should not',
+  "mightn't": 'might not',
+  "mustn't": 'must not',
+};
+
+function normalizeText(text: string) {
+  const expanded = text
+    .toLowerCase()
+    .replace(/\b[\w']+\b/g, (match) => ENGLISH_CONTRACTIONS[match] ?? match);
+
+  return expanded.normalize('NFKC').match(/[\p{L}\p{N}]+/gu)?.join('') ?? '';
+}
+
+function levenshteinDistance(a: string, b: string) {
+  const previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const current = new Array<number>(b.length + 1);
+
+  for (let i = 1; i <= a.length; i++) {
+    current[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(
+        current[j - 1] + 1,
+        previous[j] + 1,
+        previous[j - 1] + cost
+      );
+    }
+    previous.splice(0, previous.length, ...current);
+  }
+
+  return previous[b.length];
+}
+
 function isSpeechMatch(transcript: string, word: string): boolean {
   if (!transcript || !word) return false;
-  return transcript === word;
+  if (transcript === word) return true;
+
+  const shorterLength = Math.min(transcript.length, word.length);
+  if (shorterLength >= 3 && (transcript.includes(word) || word.includes(transcript))) {
+    return true;
+  }
+
+  if (word.length < 4) return false;
+
+  const maxDistance = Math.max(1, Math.ceil(word.length * 0.25));
+  return levenshteinDistance(transcript, word) <= maxDistance;
 }
 
 const MIN_PRONUNCIATION_SCORE = 70;
@@ -98,16 +180,6 @@ function encodeWav(samples: Float32Array, sampleRate: number) {
   return new Blob([view], { type: 'audio/wav; codecs=audio/pcm; samplerate=16000' });
 }
 
-const getLangSpeakLabel = (code: string) => {
-  const map: Record<string, string> = {
-    'en': 'Англисче айтыңыз!', 'ru': 'Орусча айтыңыз!', 'tr': 'Түркчө айтыңыз!',
-    'zh': 'Кытайча айтыңыз!', 'ar': 'Арабча айтыңыз!', 'es': 'Испанча айтыңыз!',
-    'fr': 'Французча айтыңыз!', 'de': 'Немисче айтыңыз!', 'ko': 'Корейче айтыңыз!',
-    'ja': 'Жапончо айтыңыз!', 'ky': 'Кыргызча айтыңыз!'
-  };
-  return map[code] || 'Англисче айтыңыз!';
-};
-
 export default function PlayContainer({ theme, words, themeId, isLocal, onBackToSetup }: PlayContainerProps) {
   const router = useRouter();
   const t = useTranslations('PlayGame');
@@ -173,11 +245,14 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         recognitionRef.current.onresult = (event: any) => {
           const alternatives: string[] = Array.from(event.results[0])
             .map((r: any) => r.transcript.toLowerCase().trim());
-          handleSpeechResult(alternatives[0] ?? '');
+          handleSpeechResult(alternatives);
         };
 
         recognitionRef.current.onerror = (event: any) => {
           console.error("Speech recognition error", event.error);
+          if (event.error === 'no-speech') {
+            handleNoSpeechDetected();
+          }
           setIsListening(false);
         };
 
@@ -348,7 +423,7 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
 
   const submitAssessmentAudio = async (blob: Blob, filename: string) => {
     if (blob.size < 1000) {
-      handleSpeechResult('', true);
+      handleNoSpeechDetected();
       return;
     }
 
@@ -374,11 +449,11 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
         );
       } else {
         console.warn('Assessment did not recognize speech:', data.error ?? res.status);
-        handleSpeechResult(transcript, true);
+        handleNoSpeechDetected();
       }
     } catch (e) {
       console.error('Assessment failed:', e);
-      handleSpeechResult('', true);
+      handleNoSpeechDetected();
     } finally {
       setIsProcessing(false);
     }
@@ -504,22 +579,6 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     }
   };
 
-  const normalizeText = (text: string) => {
-    let s = text.toLowerCase();
-    s = s.replace(/what's/gi, 'what is').replace(/it's/gi, 'it is').replace(/he's/gi, 'he is').replace(/she's/gi, 'she is')
-         .replace(/that's/gi, 'that is').replace(/who's/gi, 'who is').replace(/where's/gi, 'where is').replace(/how's/gi, 'how is')
-         .replace(/there's/gi, 'there is').replace(/let's/gi, 'let us').replace(/i'm/gi, 'i am').replace(/you're/gi, 'you are')
-         .replace(/we're/gi, 'we are').replace(/they're/gi, 'they are').replace(/i've/gi, 'i have').replace(/you've/gi, 'you have')
-         .replace(/we've/gi, 'we have').replace(/they've/gi, 'they have').replace(/i'll/gi, 'i will').replace(/you'll/gi, 'you will')
-         .replace(/he'll/gi, 'he will').replace(/she'll/gi, 'she will').replace(/we'll/gi, 'we will').replace(/they'll/gi, 'they will')
-         .replace(/isn't/gi, 'is not').replace(/aren't/gi, 'are not').replace(/wasn't/gi, 'was not').replace(/weren't/gi, 'were not')
-         .replace(/haven't/gi, 'have not').replace(/hasn't/gi, 'has not').replace(/hadn't/gi, 'had not').replace(/won't/gi, 'will not')
-         .replace(/wouldn't/gi, 'would not').replace(/don't/gi, 'do not').replace(/doesn't/gi, 'does not').replace(/didn't/gi, 'did not')
-         .replace(/can't/gi, 'cannot').replace(/couldn't/gi, 'could not').replace(/shouldn't/gi, 'should not').replace(/mightn't/gi, 'might not')
-         .replace(/mustn't/gi, 'must not');
-    return s.replace(/[^a-zа-яёүөң0-9]/gi, '');
-  };
-
   const triggerNextWord = (isCorrect: boolean) => {
     let newHistory = gameHistory;
     const currentWord = gameWords[currentWordIndex];
@@ -560,16 +619,34 @@ export default function PlayContainer({ theme, words, themeId, isLocal, onBackTo
     }
   };
 
-  const handleSpeechResult = (transcript: string, forceIncorrect = false) => {
+  const handleNoSpeechDetected = () => {
     if (stage !== 'playing' || !gameWords[currentWordIndex]) return;
     if (mode === 'team' && turnState !== 'answering') return;
+
+    setPronunciationScore(null);
+    setFeedbackMsg(t('speechNotRecognized'));
+  };
+
+  const handleSpeechResult = (result: string | string[], forceIncorrect = false) => {
+    if (stage !== 'playing' || !gameWords[currentWordIndex]) return;
+    if (mode === 'team' && turnState !== 'answering') return;
+
+    const transcripts = (Array.isArray(result) ? result : [result])
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (transcripts.length === 0) {
+      handleNoSpeechDetected();
+      return;
+    }
+
+    const currentWord = gameWords[currentWordIndex].word;
+    const normWord = normalizeText(currentWord);
+    const transcript = transcripts.find((item) => isSpeechMatch(normalizeText(item), normWord)) ?? transcripts[0];
     
     setCurrentWordInputs(prev => [...prev, transcript]);
     
-    const currentWord = gameWords[currentWordIndex].word;
-    
     const normTranscript = normalizeText(transcript);
-    const normWord = normalizeText(currentWord);
 
     if (!forceIncorrect && isSpeechMatch(normTranscript, normWord)) {
       playSound('correct');
